@@ -1,0 +1,10 @@
+.env
+deploy/deploy.env
+deploy/task-definition.rendered.json
+*.pyc
+__pycache__/
+.venv/
+venv/
+.DS_Store
+node_modules/
+*.log

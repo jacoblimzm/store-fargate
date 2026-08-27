@@ -1,0 +1,113 @@
+:root {
+  --bg: #0e1116;
+  --surface: #171c24;
+  --surface-2: #1f2530;
+  --border: #2a313d;
+  --text: #e6e9ef;
+  --muted: #8b95a5;
+  --primary: #5b8cff;
+  --primary-hover: #4a7bf0;
+  --credit: #3ecf8e;
+  --debit: #ff6b6b;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+.right { text-align: right; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand { font-weight: 700; font-size: 1.2rem; letter-spacing: 0.3px; }
+.brand-mark { color: var(--primary); margin-right: 6px; }
+
+.container { max-width: 880px; margin: 0 auto; padding: 32px 24px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+/* Auth */
+.auth-card { max-width: 380px; margin: 48px auto; }
+.auth-card h1 { margin: 0 0 4px; }
+form label { display: block; margin: 16px 0 6px; font-size: 0.9rem; color: var(--muted); }
+form input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1rem;
+}
+form input:focus { outline: none; border-color: var(--primary); }
+.demo-hint { margin-top: 20px; font-size: 0.85rem; }
+code { background: var(--surface-2); padding: 2px 6px; border-radius: 6px; }
+
+/* Buttons */
+.btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  padding: 12px 18px;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.btn-primary { background: var(--primary); color: #fff; width: 100%; margin-top: 20px; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-ghost { background: transparent; color: var(--muted); padding: 8px 12px; }
+.btn-ghost:hover { color: var(--text); }
+
+.error { color: var(--debit); margin-top: 12px; font-size: 0.9rem; }
+
+/* Dashboard */
+.welcome { margin-bottom: 24px; }
+.welcome h1 { margin: 0; }
+.account-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.account-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.account-card:hover { border-color: var(--primary); }
+.account-type { text-transform: capitalize; color: var(--muted); font-size: 0.85rem; }
+.account-number { font-family: ui-monospace, monospace; letter-spacing: 1px; }
+.balance-amount { font-size: 1.4rem; font-weight: 700; }
+
+/* Account detail */
+.account-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.balance { text-align: right; }
+.balance .muted { margin: 0; font-size: 0.85rem; }
+
+.tx-table { width: 100%; border-collapse: collapse; }
+.tx-table th, .tx-table td { padding: 12px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+.tx-table th { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+.tx-table td.credit { color: var(--credit); }
+.tx-table td.debit { color: var(--debit); }

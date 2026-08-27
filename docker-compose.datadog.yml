@@ -1,0 +1,94 @@
+# Phase 2 overlay: adds a Datadog Agent sidecar and turns on APM, log
+# collection, and Postgres DBM. Compose with the base file:
+#
+#   DD_API_KEY=xxxx docker compose -f docker-compose.yml -f docker-compose.datadog.yml up --build
+#
+# Tracing uses a Unix Domain Socket (UDS) shared through the `dd-sockets`
+# volume, mirroring the Fargate topology and following the Datadog Docker APM
+# docs. The tracer points at the socket via DD_TRACE_AGENT_URL / DD_DOGSTATSD_URL
+# below; DD_AGENT_HOST is deliberately NOT set.
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    environment:
+      DD_API_KEY: ${DD_API_KEY:?set DD_API_KEY to run the Datadog overlay}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+      DD_APM_ENABLED: "true"
+      DD_APM_NON_LOCAL_TRAFFIC: "true"
+      # Expose the trace + DogStatsD receivers as sockets in the shared volume.
+      DD_APM_RECEIVER_SOCKET: /var/run/datadog/apm.socket
+      DD_DOGSTATSD_SOCKET: /var/run/datadog/dsd.socket
+      DD_LOGS_ENABLED: "true"
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      DD_PROCESS_AGENT_ENABLED: "true"
+      # Cloud Network Monitoring (CNM): enable the system-probe network module.
+      # https://docs.datadoghq.com/network_monitoring/cloud_network_monitoring/setup/?tab=docker
+      DD_SYSTEM_PROBE_NETWORK_ENABLED: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      # CNM: system-probe needs debugfs for eBPF.
+      - /sys/kernel/debug:/sys/kernel/debug
+      - dd-sockets:/var/run/datadog
+    # CNM: eBPF-based network tracing needs these kernel capabilities + apparmor.
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - SYS_PTRACE
+      - NET_ADMIN
+      - NET_BROADCAST
+      - NET_RAW
+      - IPC_LOCK
+      - CHOWN
+    security_opt:
+      - apparmor:unconfined
+
+  db:
+    # Enable pg_stat_statements so Datadog DBM can collect query metrics.
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/dbm/init-datadog.sql:/docker-entrypoint-initdb.d/init-datadog.sql:ro
+    labels:
+      com.datadoghq.ad.check_names: '["postgres"]'
+      com.datadoghq.ad.init_configs: '[{}]'
+      com.datadoghq.ad.instances: |-
+        [{
+          "host": "%%host%%",
+          "port": 5432,
+          "username": "datadog",
+          "password": "datadog",
+          "dbname": "pay2play",
+          "dbm": true,
+          "collect_schemas": {"enabled": true},
+          "tags": ["service:pay2play-db", "env:local"]
+        }]
+
+  backend:
+    environment:
+      # Tracer points at the UDS (ddtrace-run is auto-enabled by entrypoint.sh
+      # when DD_TRACE_AGENT_URL is set). DD_AGENT_HOST is intentionally unset.
+      DD_TRACE_AGENT_URL: unix:///var/run/datadog/apm.socket
+      DD_DOGSTATSD_URL: unix:///var/run/datadog/dsd.socket
+      DD_ENV: local
+      DD_SERVICE: pay2play-backend
+      DD_VERSION: "0.1.0"
+      DD_LOGS_INJECTION: "true"
+      DD_RUNTIME_METRICS_ENABLED: "true"
+      # Propagate DB monitoring context from traces to DBM.
+      DD_DBM_PROPAGATION_MODE: "full"
+    volumes:
+      - dd-sockets:/var/run/datadog
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "python", "service": "pay2play-backend"}]'
+    depends_on:
+      datadog-agent:
+        condition: service_started
+
+  frontend:
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "nginx", "service": "pay2play-frontend"}]'
+
+volumes:
+  dd-sockets:
