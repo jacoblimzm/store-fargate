@@ -45,6 +45,14 @@ def index():
     return {"service": "pay2play-combined-fe"}
 
 
+@app.get("/api/pay")
+def pay():
+    # Deliberately logs sensitive data (a classic mistake) so we can prove
+    # Fluent Bit obfuscation redacts it BEFORE the log ships to Datadog.
+    logger.info("charge ok card=4111111111111111 email=ada@pay2play.test amount=42.00")
+    return {"status": "charged"}
+
+
 @app.after_request
 def _log_request(response):
     logger.info("%s %s %s", request.method, request.path, response.status_code)
