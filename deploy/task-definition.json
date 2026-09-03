@@ -41,10 +41,6 @@
       "essential": true,
       "portMappings": [{ "containerPort": 8000, "protocol": "tcp" }],
       "environment": [
-        { "name": "POSTGRES_HOST", "value": "127.0.0.1" },
-        { "name": "POSTGRES_PORT", "value": "5432" },
-        { "name": "POSTGRES_DB", "value": "pay2play" },
-        { "name": "POSTGRES_USER", "value": "pay2play" },
         { "name": "SEED_ON_START", "value": "true" },
         { "name": "DD_ENV", "value": "${DD_ENV}" },
         { "name": "DD_SERVICE", "value": "pay2play-backend" },
@@ -58,14 +54,13 @@
         { "name": "OPENAI_MODEL", "value": "gpt-5" }
       ],
       "secrets": [
-        { "name": "POSTGRES_PASSWORD", "valueFrom": "${DB_PASSWORD_SECRET_ARN}" },
+        { "name": "DATABASE_URL", "valueFrom": "${DATABASE_URL_SECRET_ARN}" },
         { "name": "JWT_SECRET", "valueFrom": "${JWT_SECRET_ARN}" },
         { "name": "OPENAI_API_KEY", "valueFrom": "${OPENAI_API_KEY_SECRET_ARN}" }
       ],
       "mountPoints": [
         { "containerPath": "/var/run/datadog", "sourceVolume": "dd-sockets" }
       ],
-      "dependsOn": [{ "containerName": "db", "condition": "HEALTHY" }],
       "logConfiguration": {
         "logDriver": "awsfirelens",
         "options": {
@@ -75,48 +70,6 @@
           "provider": "ecs",
           "dd_service": "pay2play-backend",
           "dd_source": "python",
-          "dd_message_key": "log",
-          "dd_tags": "env:${DD_ENV}"
-        },
-        "secretOptions": [
-          { "name": "apikey", "valueFrom": "${DD_API_KEY_SECRET_ARN}" }
-        ]
-      }
-    },
-    {
-      "name": "db",
-      "image": "postgres:16",
-      "essential": true,
-      "portMappings": [{ "containerPort": 5432, "protocol": "tcp" }],
-      "command": ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"],
-      "environment": [
-        { "name": "POSTGRES_DB", "value": "pay2play" },
-        { "name": "POSTGRES_USER", "value": "pay2play" }
-      ],
-      "secrets": [
-        { "name": "POSTGRES_PASSWORD", "valueFrom": "${DB_PASSWORD_SECRET_ARN}" }
-      ],
-      "healthCheck": {
-        "command": ["CMD-SHELL", "pg_isready -U pay2play -d pay2play"],
-        "interval": 10,
-        "timeout": 5,
-        "retries": 10,
-        "startPeriod": 30
-      },
-      "dockerLabels": {
-        "com.datadoghq.ad.check_names": "[\"postgres\"]",
-        "com.datadoghq.ad.init_configs": "[{}]",
-        "com.datadoghq.ad.instances": "[{\"host\":\"127.0.0.1\",\"port\":5432,\"username\":\"datadog\",\"password\":\"datadog\",\"dbname\":\"pay2play\",\"dbm\":true,\"collect_schemas\":{\"enabled\":true},\"tags\":[\"service:pay2play-db\",\"env:${DD_ENV}\"]}]"
-      },
-      "logConfiguration": {
-        "logDriver": "awsfirelens",
-        "options": {
-          "Name": "datadog",
-          "Host": "http-intake.logs.${DD_SITE}",
-          "TLS": "on",
-          "provider": "ecs",
-          "dd_service": "pay2play-db",
-          "dd_source": "postgresql",
           "dd_message_key": "log",
           "dd_tags": "env:${DD_ENV}"
         },
