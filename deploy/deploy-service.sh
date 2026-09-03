@@ -29,6 +29,7 @@ _ENV_FILE="$(cd "$(dirname "$0")" && pwd)/deploy.env"
 : "${AWS_ACCOUNT_ID:?}"; : "${AWS_REGION:?}"; : "${ECS_CLUSTER:?}"
 : "${SUBNETS:?}"; : "${SECURITY_GROUP_ID:?}"; : "${TARGET_GROUP_ARN:?}"
 : "${DD_API_KEY_SECRET_ARN:?}"; : "${DB_PASSWORD_SECRET_ARN:?}"; : "${JWT_SECRET_ARN:?}"
+: "${OPENAI_API_KEY_SECRET_ARN:?run deploy/openai-secret.sh first}"
 
 SERVICE_NAME="${SERVICE_NAME:-pay2play}"
 DESIRED_COUNT="${DESIRED_COUNT:-1}"
@@ -39,7 +40,7 @@ export DD_ENV="${DD_ENV:-demo}"
 # IAM role names the task def references (override to add a prefix, e.g. jake-...).
 export EXECUTION_ROLE_NAME="${EXECUTION_ROLE_NAME:-ecsTaskExecutionRole}"
 export TASK_ROLE_NAME="${TASK_ROLE_NAME:-pay2playTaskRole}"
-export AWS_ACCOUNT_ID AWS_REGION DD_API_KEY_SECRET_ARN DB_PASSWORD_SECRET_ARN JWT_SECRET_ARN
+export AWS_ACCOUNT_ID AWS_REGION DD_API_KEY_SECRET_ARN DB_PASSWORD_SECRET_ARN JWT_SECRET_ARN OPENAI_API_KEY_SECRET_ARN
 
 if [ "$DESIRED_COUNT" -gt 1 ]; then
   echo "!! WARNING: DESIRED_COUNT=$DESIRED_COUNT. Postgres runs inside the task, so"

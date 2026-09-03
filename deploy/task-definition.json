@@ -53,11 +53,14 @@
         { "name": "DD_RUNTIME_METRICS_ENABLED", "value": "true" },
         { "name": "DD_DBM_PROPAGATION_MODE", "value": "full" },
         { "name": "DD_TRACE_AGENT_URL", "value": "unix:///var/run/datadog/apm.socket" },
-        { "name": "DD_DOGSTATSD_URL", "value": "unix:///var/run/datadog/dsd.socket" }
+        { "name": "DD_DOGSTATSD_URL", "value": "unix:///var/run/datadog/dsd.socket" },
+        { "name": "DD_LLMOBS_ML_APP", "value": "pay2play-chatbot" },
+        { "name": "OPENAI_MODEL", "value": "gpt-5" }
       ],
       "secrets": [
         { "name": "POSTGRES_PASSWORD", "valueFrom": "${DB_PASSWORD_SECRET_ARN}" },
-        { "name": "JWT_SECRET", "valueFrom": "${JWT_SECRET_ARN}" }
+        { "name": "JWT_SECRET", "valueFrom": "${JWT_SECRET_ARN}" },
+        { "name": "OPENAI_API_KEY", "valueFrom": "${OPENAI_API_KEY_SECRET_ARN}" }
       ],
       "mountPoints": [
         { "containerPath": "/var/run/datadog", "sourceVolume": "dd-sockets" }

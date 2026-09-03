@@ -78,6 +78,12 @@ services:
       DD_RUNTIME_METRICS_ENABLED: "true"
       # Propagate DB monitoring context from traces to DBM.
       DD_DBM_PROPAGATION_MODE: "full"
+      # LLM Observability: enabled in-code via LLMObs.enable() (see
+      # app/llmobs_setup.py) while running under ddtrace-run. Agentless mode
+      # posts straight to the Datadog intake using DD_API_KEY / DD_SITE.
+      DD_API_KEY: ${DD_API_KEY:?set DD_API_KEY to run the Datadog overlay}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+      DD_LLMOBS_ML_APP: pay2play-chatbot
     volumes:
       - dd-sockets:/var/run/datadog
     labels:

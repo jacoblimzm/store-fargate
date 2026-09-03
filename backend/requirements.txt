@@ -7,3 +7,4 @@ bcrypt==5.0.0
 flask-cors==6.0.5
 ddtrace==4.13.0
 python-json-logger==4.1.0
+openai>=3,<4

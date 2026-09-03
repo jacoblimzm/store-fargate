@@ -29,6 +29,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-local-dev-secret}
       JWT_EXP_MINUTES: ${JWT_EXP_MINUTES:-60}
       SEED_ON_START: ${SEED_ON_START:-true}
+      # Chatbot add-on. If unset, /api/chat returns 503 and the app still runs.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5}
     depends_on:
       db:
         condition: service_healthy

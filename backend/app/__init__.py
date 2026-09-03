@@ -4,6 +4,7 @@ from flask import Flask, request
 from flask_cors import CORS
 
 from .db import SessionLocal
+from .llmobs_setup import enable_llmobs
 from .logging_config import configure_logging
 
 logger = logging.getLogger("pay2play")
@@ -17,15 +18,19 @@ def create_app() -> Flask:
     Schema creation + seeding happen once at startup via init_db.py.
     """
     configure_logging()
+    # Enable LLM Observability in-code (runs under ddtrace-run). See
+    # llmobs_setup.py for the rationale behind validating this combination.
+    enable_llmobs()
     app = Flask(__name__)
     CORS(app)
 
-    from .routes import account_bp, auth_bp, health_bp, user_bp
+    from .routes import account_bp, auth_bp, chat_bp, health_bp, user_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(account_bp)
+    app.register_blueprint(chat_bp)
 
     @app.after_request
     def _log_request(response):

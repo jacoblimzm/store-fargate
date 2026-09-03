@@ -55,4 +55,7 @@ const api = {
   transactions(accountId) {
     return this.request(`/accounts/${accountId}/transactions`);
   },
+  chat(message) {
+    return this.request("/chat", { method: "POST", body: { message } });
+  },
 };
