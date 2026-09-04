@@ -59,6 +59,80 @@ _DEMO_USERS = [
             },
         ],
     },
+    {
+        "email": "alan@pay2play.test",
+        "first_name": "Alan",
+        "last_name": "Turing",
+        "accounts": [
+            {
+                "account_number": "1000000003",
+                "account_type": "checking",
+                "transactions": [
+                    ("credit", "2750.00", "Payroll deposit"),
+                    ("debit", "64.30", "Bookstore"),
+                    ("debit", "18.75", "Lunch"),
+                    ("debit", "300.00", "Car payment"),
+                ],
+            },
+        ],
+    },
+    {
+        "email": "katherine@pay2play.test",
+        "first_name": "Katherine",
+        "last_name": "Johnson",
+        "accounts": [
+            {
+                "account_number": "1000000004",
+                "account_type": "checking",
+                "transactions": [
+                    ("credit", "4200.00", "Payroll deposit"),
+                    ("debit", "150.00", "Utilities"),
+                    ("debit", "89.99", "Phone bill"),
+                ],
+            },
+            {
+                "account_number": "2000000004",
+                "account_type": "savings",
+                "transactions": [
+                    ("credit", "12000.00", "Opening balance"),
+                    ("credit", "500.00", "Monthly transfer"),
+                ],
+            },
+        ],
+    },
+    {
+        "email": "margaret@pay2play.test",
+        "first_name": "Margaret",
+        "last_name": "Hamilton",
+        "accounts": [
+            {
+                "account_number": "1000000005",
+                "account_type": "checking",
+                "transactions": [
+                    ("credit", "3600.00", "Payroll deposit"),
+                    ("debit", "1200.00", "Rent"),
+                    ("debit", "55.40", "Groceries"),
+                    ("credit", "75.00", "Refund"),
+                ],
+            },
+        ],
+    },
+    {
+        "email": "linus@pay2play.test",
+        "first_name": "Linus",
+        "last_name": "Torvalds",
+        "accounts": [
+            {
+                "account_number": "1000000006",
+                "account_type": "checking",
+                "transactions": [
+                    ("credit", "5100.00", "Payroll deposit"),
+                    ("debit", "42.00", "Coffee subscription"),
+                    ("debit", "999.00", "New laptop"),
+                ],
+            },
+        ],
+    },
 ]
 
 
@@ -84,11 +158,14 @@ def _build_transactions(session, account: Account, tx_specs: list) -> None:
 def seed() -> None:
     session = get_session()
     try:
-        if session.query(User).count() > 0:
-            return  # already seeded
-
         pw_hash = hash_password(_DEMO_PASSWORD)
+        created = 0
         for u in _DEMO_USERS:
+            # Idempotent per-user: skip users that already exist so new roster
+            # members get added on redeploy without duplicating existing ones.
+            if session.query(User).filter_by(email=u["email"]).first():
+                continue
+            created += 1
             user = User(
                 email=u["email"],
                 password_hash=pw_hash,
