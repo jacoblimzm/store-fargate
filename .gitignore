@@ -11,3 +11,12 @@ node_modules/
 
 # envsubst-rendered task defs (generated at deploy time)
 deploy/*.rendered.json
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+# Keep .terraform.lock.hcl committed for reproducible provider versions.
