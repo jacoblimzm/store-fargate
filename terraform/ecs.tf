@@ -297,6 +297,13 @@ resource "aws_ecs_service" "backend" {
   launch_type                   = "FARGATE"
   availability_zone_rebalancing = "ENABLED"
 
+  # Fail fast + auto-rollback on a bad rollout instead of waiting out the
+  # pipeline's stabilize timeout.
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
   network_configuration {
     subnets          = var.public_subnet_ids
     security_groups  = [aws_security_group.task.id]
@@ -325,7 +332,14 @@ resource "aws_ecs_service" "frontend" {
   desired_count                     = 1
   launch_type                       = "FARGATE"
   availability_zone_rebalancing     = "ENABLED"
-  health_check_grace_period_seconds = 120
+  health_check_grace_period_seconds = 30
+
+  # Fail fast + auto-rollback on a bad rollout instead of waiting out the
+  # pipeline's stabilize timeout.
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   network_configuration {
     subnets          = var.public_subnet_ids
@@ -354,6 +368,13 @@ resource "aws_ecs_service" "combined_fe" {
   desired_count                 = 1
   launch_type                   = "FARGATE"
   availability_zone_rebalancing = "ENABLED"
+
+  # Fail fast + auto-rollback on a bad rollout instead of waiting out the
+  # pipeline's stabilize timeout.
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   network_configuration {
     subnets          = var.public_subnet_ids

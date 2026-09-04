@@ -22,16 +22,19 @@ resource "aws_lb_target_group" "main" {
   vpc_id      = var.vpc_id
   target_type = "ip"
 
-  deregistration_delay = 300
+  # Short drain: this app has no long-lived in-flight requests to preserve,
+  # and a long drain directly lengthens each rollout (the old deployment stays
+  # DRAINING until it elapses, which is what `wait services-stable` blocks on).
+  deregistration_delay = 30
 
   health_check {
     protocol            = "HTTP"
     port                = "traffic-port"
     path                = "/"
     matcher             = "200-399"
-    interval            = 30
+    interval            = 15
     timeout             = 5
-    healthy_threshold   = 5
+    healthy_threshold   = 2
     unhealthy_threshold = 2
   }
 }
