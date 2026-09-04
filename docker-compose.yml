@@ -31,7 +31,7 @@ services:
       SEED_ON_START: ${SEED_ON_START:-true}
       # Chatbot add-on. If unset, /api/chat returns 503 and the app still runs.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5-mini}
     depends_on:
       db:
         condition: service_healthy
