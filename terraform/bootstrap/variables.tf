@@ -34,6 +34,18 @@ variable "github_repo" {
   default     = "store-fargate"
 }
 
+variable "github_owner_id" {
+  description = "Immutable numeric ID of the GitHub owner (from the OIDC sub claim)"
+  type        = string
+  default     = "71201187"
+}
+
+variable "github_repo_id" {
+  description = "Immutable numeric ID of the GitHub repo (from the OIDC sub claim)"
+  type        = string
+  default     = "1348342696"
+}
+
 variable "deploy_role_name" {
   description = "Name of the IAM role assumed by GitHub Actions"
   type        = string

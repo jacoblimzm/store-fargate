@@ -82,13 +82,28 @@ data "aws_iam_policy_document" "github_assume" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Allow the main branch and pull requests from this repo only.
+    # GitHub issues immutable-ID subjects
+    # (repo:OWNER@OWNER_ID/REPO@REPO_ID:...), so pin the repo by its immutable
+    # numeric IDs and restrict the ref via a sub wildcard. This is rename-safe
+    # and format-agnostic (works for both legacy and immutable subjects).
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:repository_owner_id"
+      values   = [var.github_owner_id]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:repository_id"
+      values   = [var.github_repo_id]
+    }
+
+    # Allow the main branch and pull requests only.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-        "repo:${var.github_owner}/${var.github_repo}:ref:refs/heads/main",
-        "repo:${var.github_owner}/${var.github_repo}:pull_request",
+        "repo:*:ref:refs/heads/main",
+        "repo:*:pull_request",
       ]
     }
   }
@@ -136,6 +151,7 @@ data "aws_iam_policy_document" "deploy" {
       "cloudfront:*",
       "acm:Describe*",
       "acm:List*",
+      "acm:GetCertificate",
       "route53:*",
       "rds:*",
       "servicediscovery:*",
@@ -152,6 +168,7 @@ data "aws_iam_policy_document" "deploy" {
     actions = [
       "secretsmanager:GetSecretValue",
       "secretsmanager:DescribeSecret",
+      "secretsmanager:GetResourcePolicy",
       "secretsmanager:ListSecrets",
       "ec2:Describe*",
       "ec2:AuthorizeSecurityGroup*",
