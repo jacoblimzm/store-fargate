@@ -1,0 +1,84 @@
+name: terraform-plan
+
+# On pull requests that touch the Terraform stack: check formatting, validate,
+# and post a plan as a PR comment. No changes are applied.
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-plan.yml"
+
+concurrency:
+  group: pay2play-plan-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: ap-southeast-1
+  DEPLOY_ROLE_ARN: arn:aws:iam::369042512949:role/github-actions-pay2play-deploy
+  TERRAFORM_VERSION: 1.16.0
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        working-directory: terraform
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        working-directory: terraform
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        id: plan
+        working-directory: terraform
+        run: |
+          set -o pipefail
+          terraform plan -input=false -no-color -var="image_tag=${{ github.sha }}" 2>&1 | tee /tmp/plan.txt
+
+      - name: Comment plan on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let plan = '';
+            try { plan = fs.readFileSync('/tmp/plan.txt', 'utf8'); } catch (e) { plan = 'No plan output.'; }
+            const max = 60000;
+            if (plan.length > max) plan = plan.slice(-max);
+            const body = [
+              '### Terraform Plan',
+              '```',
+              plan,
+              '```',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });

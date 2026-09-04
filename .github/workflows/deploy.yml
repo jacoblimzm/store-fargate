@@ -1,0 +1,85 @@
+name: deploy
+
+# Build + push all container images (tagged with the commit SHA) and apply the
+# Terraform stack, which registers new task-definition revisions and rolls the
+# ECS services. Runs on pushes to main.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "combined-fe/**"
+      - "deploy/fluent-bit/**"
+      - "terraform/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: pay2play-deploy
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-southeast-1
+  DEPLOY_ROLE_ARN: arn:aws:iam::369042512949:role/github-actions-pay2play-deploy
+  TERRAFORM_VERSION: 1.16.0
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push images
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          build() {
+            local repo="$1" ctx="$2"
+            echo "::group::build $repo"
+            docker build -t "$REGISTRY/$repo:$TAG" "$ctx"
+            docker push "$REGISTRY/$repo:$TAG"
+            echo "::endgroup::"
+          }
+          build pay2play-backend     backend
+          build pay2play-frontend    frontend
+          build pay2play-combined-fe combined-fe
+          build pay2play-logrouter   deploy/fluent-bit
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: terraform
+        run: terraform init -input=false
+
+      - name: Terraform apply
+        working-directory: terraform
+        run: terraform apply -input=false -auto-approve -var="image_tag=${{ github.sha }}"
+
+      - name: Wait for ECS services to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster pay2playcluster \
+            --services pay2play-backend pay2play-frontend pay2play-combined-fe \
+            --region "$AWS_REGION"
