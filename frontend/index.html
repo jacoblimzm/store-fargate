@@ -6,13 +6,82 @@
     <title>Pay2Play</title>
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A6%3C/text%3E%3C/svg%3E" />
+
+    <!-- Datadog RUM (browser). applicationId + clientToken are public client-side
+         identifiers, so they're safe to ship in the page (CDN async setup). -->
+    <script>
+      (function (h, o, u, n, d) {
+        h = h[d] = h[d] || { q: [], onReady: function (c) { h.q.push(c); } };
+        d = o.createElement(u); d.async = 1; d.src = n; d.crossOrigin = "";
+        n = o.getElementsByTagName(u)[0]; n.parentNode.insertBefore(d, n);
+      })(window, document, "script",
+         "https://www.datadoghq-browser-agent.com/us1/v7/datadog-rum.js", "DD_RUM");
+      window.DD_RUM.onReady(function () {
+        window.DD_RUM.init({
+          applicationId: "0825fc8e-71d5-4b31-ab30-9f410a1d725e",
+          clientToken: "pubb5dbe291b1849d5594315a0b66022b55",
+          site: "datadoghq.com",
+          service: "pay2play-frontend",
+          env: "production",
+          version: "0.1.0",
+          sessionSampleRate: 100,
+          sessionReplaySampleRate: 100,
+          trackUserInteractions: true,
+          trackResources: true,
+          trackLongTasks: true,
+          // Same-origin /api/* calls get APM trace headers injected, so RUM
+          // sessions link end-to-end to backend traces.
+          allowedTracingUrls: [
+            { match: window.location.origin, propagatorTypes: ["datadog", "tracecontext"] }
+          ]
+        });
+        window.DD_RUM.startSessionReplayRecording();
+      });
+    </script>
   </head>
-  <body>
+  <body class="pre-auth">
     <header class="topbar">
       <div class="brand">
         <span class="brand-mark">◈</span> Pay2Play
       </div>
-      <button id="logoutBtn" class="btn btn-ghost hidden">Log out</button>
+
+      <!-- Authenticated user area: profile button + dropdown menu. Hidden on the
+           login view (mirrors the previous logout button show/hide logic). -->
+      <div id="userArea" class="user-area hidden">
+        <button
+          id="userMenuBtn"
+          class="user-btn"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="userMenu"
+          aria-label="Open account menu"
+        >
+          <span class="avatar" id="userAvatar" aria-hidden="true"></span>
+          <span class="user-btn-meta">
+            <span class="user-btn-name" id="userBtnName"></span>
+            <span class="user-btn-email" id="userBtnEmail"></span>
+          </span>
+          <span class="user-caret" aria-hidden="true">▾</span>
+        </button>
+
+        <div id="userMenu" class="user-menu hidden" role="menu" aria-labelledby="userMenuBtn">
+          <div class="user-menu-header">
+            <span class="avatar avatar-lg" id="menuAvatar" aria-hidden="true"></span>
+            <span class="user-menu-identity">
+              <span class="user-menu-name" id="menuName"></span>
+              <span class="user-menu-email" id="menuEmail"></span>
+            </span>
+          </div>
+          <div class="user-menu-sep" role="separator"></div>
+          <button id="profileMenuItem" class="user-menu-item" type="button" role="menuitem">
+            <span aria-hidden="true">👤</span> Account details
+          </button>
+          <button id="logoutBtn" class="user-menu-item danger" type="button" role="menuitem">
+            <span aria-hidden="true">⎋</span> Log out
+          </button>
+        </div>
+      </div>
     </header>
 
     <main id="app" class="container">
@@ -31,10 +100,16 @@
               <input type="password" id="password" autocomplete="current-password" required />
             </label>
             <button type="submit" class="btn btn-primary">Sign in</button>
+            <button type="button" id="simulateBtn" class="btn btn-secondary">
+              🎲 Simulate user
+            </button>
+            <p id="simHint" class="muted sim-hint hidden" role="status" aria-live="polite"></p>
             <p id="loginError" class="error hidden"></p>
           </form>
           <p class="muted demo-hint">
-            Demo: <code>ada@pay2play.test</code> / <code>Password123!</code>
+            Every demo user's password is <code>Password123!</code>. Use
+            <strong>Simulate user</strong> to auto-fill a random one's
+            credentials, then click <strong>Sign in</strong>.
           </p>
         </div>
       </section>
@@ -74,6 +149,42 @@
           </thead>
           <tbody id="txBody"></tbody>
         </table>
+      </section>
+
+      <!-- Profile view -->
+      <section id="profileView" class="view hidden">
+        <button id="profileBackBtn" class="btn btn-ghost">&larr; Back to accounts</button>
+        <div class="card profile-card">
+          <div class="profile-head">
+            <span class="avatar avatar-xl" id="profileAvatar" aria-hidden="true"></span>
+            <div class="profile-identity">
+              <h1 id="profileName">Profile</h1>
+              <p class="muted" id="profileEmail"></p>
+            </div>
+          </div>
+          <dl class="profile-details">
+            <div class="profile-row">
+              <dt>Full name</dt>
+              <dd id="profileFullName"></dd>
+            </div>
+            <div class="profile-row">
+              <dt>Email</dt>
+              <dd id="profileEmailValue"></dd>
+            </div>
+            <div class="profile-row">
+              <dt>Member since</dt>
+              <dd id="profileMemberSince"></dd>
+            </div>
+            <div class="profile-row">
+              <dt>Accounts</dt>
+              <dd id="profileAccounts"></dd>
+            </div>
+            <div class="profile-row">
+              <dt>Total balance</dt>
+              <dd id="profileTotalBalance"></dd>
+            </div>
+          </dl>
+        </div>
       </section>
     </main>
 

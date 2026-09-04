@@ -31,6 +31,7 @@ class User(Base):
             "email": self.email,
             "firstName": self.first_name,
             "lastName": self.last_name,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
         }
 
 
