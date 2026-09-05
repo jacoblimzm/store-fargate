@@ -9,6 +9,10 @@ venv/
 node_modules/
 *.log
 
+# Frontend build output (Vite)
+dist/
+frontend/dist/
+
 # envsubst-rendered task defs (generated at deploy time)
 deploy/*.rendered.json
 

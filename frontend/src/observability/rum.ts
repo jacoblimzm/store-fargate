@@ -1,0 +1,58 @@
+// Datadog RUM + browser Logs, initialised from the npm SDKs (replaces the old
+// CDN snippet). applicationId/clientToken are public client-side identifiers,
+// so they are safe to ship in the bundle. The fuller observability module
+// (Profiling, duration vitals, journey actions) is layered on in a later phase.
+import { datadogRum } from "@datadog/browser-rum";
+import { datadogLogs } from "@datadog/browser-logs";
+import type { User } from "../types";
+
+const APPLICATION_ID = "0825fc8e-71d5-4b31-ab30-9f410a1d725e";
+const CLIENT_TOKEN = "pubb5dbe291b1849d5594315a0b66022b55";
+const SERVICE = "pay2play-frontend";
+const SITE = "datadoghq.com";
+const VERSION = import.meta.env.VITE_APP_VERSION || "0.1.0";
+
+export function initObservability(): void {
+  datadogRum.init({
+    applicationId: APPLICATION_ID,
+    clientToken: CLIENT_TOKEN,
+    site: SITE,
+    service: SERVICE,
+    env: "production",
+    version: VERSION,
+    sessionSampleRate: 100,
+    sessionReplaySampleRate: 100,
+    trackUserInteractions: true,
+    trackResources: true,
+    trackLongTasks: true,
+    defaultPrivacyLevel: "allow",
+    // Same-origin /api/* calls get APM trace headers injected so RUM sessions
+    // link end-to-end to backend traces.
+    allowedTracingUrls: [
+      { match: window.location.origin, propagatorTypes: ["datadog", "tracecontext"] },
+    ],
+  });
+  datadogRum.startSessionReplayRecording();
+
+  datadogLogs.init({
+    clientToken: CLIENT_TOKEN,
+    site: SITE,
+    service: SERVICE,
+    env: "production",
+    version: VERSION,
+    sessionSampleRate: 100,
+    forwardErrorsToLogs: true,
+  });
+}
+
+export function setRumUser(user: User): void {
+  datadogRum.setUser({
+    id: String(user.id),
+    name: `${user.firstName} ${user.lastName}`.trim(),
+    email: user.email,
+  });
+}
+
+export function clearRumUser(): void {
+  datadogRum.clearUser();
+}
