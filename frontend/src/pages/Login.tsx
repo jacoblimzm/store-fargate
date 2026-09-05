@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuth } from "../auth";
+import { Brand } from "../components/ui/Brand";
 
 const DEMO_PASSWORD = "Password123!";
 const DEMO_USERS = [
@@ -46,28 +47,33 @@ export default function Login() {
 
   return (
     <main className="container">
-      <section className="card auth-card">
-        <h1>Welcome back</h1>
-        <p className="muted">Sign in to your DCash account.</p>
-        <form onSubmit={submit}>
-          <label>
-            Email
-            <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          </label>
-          <label>
-            Password
-            <input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-          </label>
-          <button type="submit" className="btn btn-primary">Sign in</button>
-          <button type="button" className="btn btn-secondary" onClick={simulate}>🎲 Simulate user</button>
-          {hint ? <p className="muted sim-hint" role="status" aria-live="polite">{hint}</p> : null}
-          {error ? <p className="error">{error}</p> : null}
-        </form>
-        <p className="muted demo-hint">
-          Every demo user's password is <code>Password123!</code>. Use <strong>Simulate user</strong> to
-          auto-fill a random one's credentials, then click <strong>Sign in</strong>.
-        </p>
-      </section>
+      <div className="auth-wrap">
+        <div className="auth-brand">
+          <Brand />
+          <div className="auth-title">DCash</div>
+          <p className="muted">your futuristic super wallet</p>
+        </div>
+        <section className="auth-card glass">
+          <form onSubmit={submit}>
+            <label className="field">
+              <span>Email</span>
+              <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </label>
+            <label className="field">
+              <span>Password</span>
+              <input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            </label>
+            <button type="submit" className="btn btn-primary">Sign in</button>
+            <button type="button" className="btn btn-secondary" onClick={simulate}>🎲 Simulate user</button>
+            {hint ? <p className="sim-hint" role="status" aria-live="polite">{hint}</p> : null}
+            {error ? <p className="error">{error}</p> : null}
+          </form>
+          <p className="demo-hint">
+            Every demo user's password is <code>Password123!</code>. Use <strong>Simulate user</strong> to
+            auto-fill a random one's credentials, then click <strong>Sign in</strong>.
+          </p>
+        </section>
+      </div>
     </main>
   );
 }

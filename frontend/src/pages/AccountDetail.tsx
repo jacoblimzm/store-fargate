@@ -27,7 +27,7 @@ export default function AccountDetail() {
   return (
     <section className="view">
       <button className="btn btn-ghost" onClick={() => navigate("/")}>&larr; Back to accounts</button>
-      <div className="card account-summary">
+      <div className="account-summary glass">
         <div>
           <p className="muted">{account.accountType.toUpperCase()}</p>
           <p className="account-number">•••• {account.accountNumber.slice(-4)}</p>

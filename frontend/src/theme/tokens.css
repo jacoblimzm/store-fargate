@@ -1,0 +1,137 @@
+/* DCash Liquid-Glass design tokens. Dark is the default; [data-theme="light"]
+   overrides. Surfaces use translucent glass (backdrop blur) over an ambient
+   tinted backdrop so panels feel layered and fluid. */
+
+:root,
+:root[data-theme="dark"] {
+  --dc-purple: #632ca6;
+  --dc-violet: #9b6dff;
+  --dc-violet-soft: #c4a9ff;
+
+  --dc-bg: #0e0b14;
+  --dc-elevated: #241c3a;
+  --dc-line: #2e2545;
+  --dc-text: #f5f3fa;
+  --dc-muted: #a79fc0;
+
+  --dc-success: #3ddc97;
+  --dc-danger: #ff5c7a;
+  --dc-warning: #ffb020;
+  --dc-info: #4fb8ff;
+
+  --dc-accent: #9b6dff;
+  --dc-on-accent: #12081f;
+  --dc-tint: rgba(155, 109, 255, 0.2);
+
+  /* glass */
+  --dc-glass: rgba(255, 255, 255, 0.07);
+  --dc-glass-strong: rgba(255, 255, 255, 0.1);
+  --dc-glass-border: rgba(255, 255, 255, 0.14);
+  --dc-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+
+  --dc-app-bg: radial-gradient(130% 90% at 18% -5%, #2a1a4e 0%, #0e0b14 58%);
+  --dc-blob-a: #7c3aed;
+  --dc-blob-b: #2e90fa;
+}
+
+:root[data-theme="light"] {
+  --dc-purple: #632ca6;
+  --dc-violet: #7c3aed;
+  --dc-violet-soft: #7c3aed;
+
+  --dc-bg: #f6f4fb;
+  --dc-elevated: #f0edf7;
+  --dc-line: #e4def0;
+  --dc-text: #1a1428;
+  --dc-muted: #6b6480;
+
+  --dc-success: #12b76a;
+  --dc-danger: #e23d53;
+  --dc-warning: #b7791f;
+  --dc-info: #2e90fa;
+
+  --dc-accent: #632ca6;
+  --dc-on-accent: #ffffff;
+  --dc-tint: rgba(99, 44, 166, 0.12);
+
+  --dc-glass: rgba(255, 255, 255, 0.6);
+  --dc-glass-strong: rgba(255, 255, 255, 0.72);
+  --dc-glass-border: rgba(255, 255, 255, 0.85);
+  --dc-shadow: 0 12px 30px rgba(80, 40, 140, 0.14);
+
+  --dc-app-bg: radial-gradient(130% 90% at 18% -5%, #ede6ff 0%, #f6f4fb 58%);
+  --dc-blob-a: #c9b6ff;
+  --dc-blob-b: #bfe0ff;
+}
+
+:root {
+  --dc-hero: linear-gradient(135deg, #632ca6 0%, #9b6dff 100%);
+  --dc-font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dc-font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --dc-blur: blur(22px) saturate(140%);
+  --dc-r-card: 18px;
+  --dc-r-btn: 14px;
+  --dc-r-pill: 999px;
+
+  /* Reusable layout standards — every page/section aligns to one column
+     width and one vertical rhythm so the app reads consistently. */
+  --dc-content-width: 500px;
+  --dc-gap: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--dc-font-ui);
+  color: var(--dc-text);
+  line-height: 1.5;
+  background: var(--dc-bg);
+  background-image: var(--dc-app-bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient colour blobs behind the glass. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -1;
+}
+body::before {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -100px;
+  background: var(--dc-blob-a);
+  opacity: 0.5;
+}
+body::after {
+  width: 380px;
+  height: 380px;
+  top: 30%;
+  right: -140px;
+  background: var(--dc-blob-b);
+  opacity: 0.4;
+}
+
+/* Liquid-glass surface utility. */
+.glass {
+  background: var(--dc-glass);
+  backdrop-filter: var(--dc-blur);
+  -webkit-backdrop-filter: var(--dc-blur);
+  border: 1px solid var(--dc-glass-border);
+  border-radius: var(--dc-r-card);
+  box-shadow: var(--dc-shadow);
+}
