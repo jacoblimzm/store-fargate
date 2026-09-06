@@ -13,6 +13,8 @@ node_modules/
 dist/
 frontend/dist/
 
+docs/
+
 # envsubst-rendered task defs (generated at deploy time)
 deploy/*.rendered.json
 
