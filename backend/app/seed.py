@@ -1,7 +1,8 @@
-"""Idempotent demo data seeding.
+"""Idempotent demo seeding — the persistent DCash baseline.
 
-Creates a couple of Pay2Play demo users, each with accounts and a bit of
-transaction history. Safe to run repeatedly: it no-ops if users already exist.
+Every baseline user maps to a character from Homer's *The Odyssey* (is_seed=True),
+each with a wallet, a little history, and a few seeded contacts so P2P transfers
+work out of the box. Safe to run repeatedly; the admin reset never removes these.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -9,130 +10,57 @@ from decimal import Decimal
 
 from .auth import hash_password
 from .db import get_session
-from .models import Account, Transaction, User
+from .models import Account, Contact, Transaction, User
 
-# password for every demo user is "Password123!"
+# password for every baseline user is "Password123!"
 _DEMO_PASSWORD = "Password123!"
 
-_DEMO_USERS = [
-    {
-        "email": "ada@pay2play.test",
-        "first_name": "Ada",
-        "last_name": "Lovelace",
-        "accounts": [
-            {
-                "account_number": "1000000001",
-                "account_type": "checking",
-                "transactions": [
-                    ("credit", "2400.00", "Payroll deposit"),
-                    ("debit", "72.19", "Grocery store"),
-                    ("debit", "15.00", "Coffee shop"),
-                    ("debit", "120.00", "Electric bill"),
-                    ("credit", "50.00", "Refund"),
-                ],
-            },
-            {
-                "account_number": "2000000001",
-                "account_type": "savings",
-                "transactions": [
-                    ("credit", "5000.00", "Opening balance"),
-                    ("credit", "250.00", "Monthly transfer"),
-                    ("credit", "250.00", "Monthly transfer"),
-                ],
-            },
-        ],
-    },
-    {
-        "email": "grace@pay2play.test",
-        "first_name": "Grace",
-        "last_name": "Hopper",
-        "accounts": [
-            {
-                "account_number": "1000000002",
-                "account_type": "checking",
-                "transactions": [
-                    ("credit", "3100.00", "Payroll deposit"),
-                    ("debit", "899.00", "Rent"),
-                    ("debit", "45.60", "Internet bill"),
-                    ("debit", "210.75", "Groceries"),
-                ],
-            },
-        ],
-    },
-    {
-        "email": "alan@pay2play.test",
-        "first_name": "Alan",
-        "last_name": "Turing",
-        "accounts": [
-            {
-                "account_number": "1000000003",
-                "account_type": "checking",
-                "transactions": [
-                    ("credit", "2750.00", "Payroll deposit"),
-                    ("debit", "64.30", "Bookstore"),
-                    ("debit", "18.75", "Lunch"),
-                    ("debit", "300.00", "Car payment"),
-                ],
-            },
-        ],
-    },
-    {
-        "email": "katherine@pay2play.test",
-        "first_name": "Katherine",
-        "last_name": "Johnson",
-        "accounts": [
-            {
-                "account_number": "1000000004",
-                "account_type": "checking",
-                "transactions": [
-                    ("credit", "4200.00", "Payroll deposit"),
-                    ("debit", "150.00", "Utilities"),
-                    ("debit", "89.99", "Phone bill"),
-                ],
-            },
-            {
-                "account_number": "2000000004",
-                "account_type": "savings",
-                "transactions": [
-                    ("credit", "12000.00", "Opening balance"),
-                    ("credit", "500.00", "Monthly transfer"),
-                ],
-            },
-        ],
-    },
-    {
-        "email": "margaret@pay2play.test",
-        "first_name": "Margaret",
-        "last_name": "Hamilton",
-        "accounts": [
-            {
-                "account_number": "1000000005",
-                "account_type": "checking",
-                "transactions": [
-                    ("credit", "3600.00", "Payroll deposit"),
-                    ("debit", "1200.00", "Rent"),
-                    ("debit", "55.40", "Groceries"),
-                    ("credit", "75.00", "Refund"),
-                ],
-            },
-        ],
-    },
-    {
-        "email": "linus@pay2play.test",
-        "first_name": "Linus",
-        "last_name": "Torvalds",
-        "accounts": [
-            {
-                "account_number": "1000000006",
-                "account_type": "checking",
-                "transactions": [
-                    ("credit", "5100.00", "Payroll deposit"),
-                    ("debit", "42.00", "Coffee subscription"),
-                    ("debit", "999.00", "New laptop"),
-                ],
-            },
-        ],
-    },
+# Complete-ish cast, grouped for easy extension: (handle, first_name, last_name).
+_ROSTER: list[tuple[str, str, str]] = [
+    # Protagonists (Ithaca)
+    ("odysseus", "Odysseus", "Laertiades"),
+    ("penelope", "Penelope", "of Ithaca"),
+    ("telemachus", "Telemachus", "Odysseus-son"),
+    ("laertes", "Laertes", "Arcesiades"),
+    ("eurycleia", "Eurycleia", "Ops-daughter"),
+    ("argos", "Argos", "the Hound"),
+    # Gods & immortals
+    ("athena", "Athena", "Pallas"),
+    ("zeus", "Zeus", "Kronides"),
+    ("poseidon", "Poseidon", "Earth-shaker"),
+    ("hermes", "Hermes", "Argeiphontes"),
+    ("calypso", "Calypso", "of Ogygia"),
+    ("circe", "Circe", "of Aeaea"),
+    ("aeolus", "Aeolus", "Hippotades"),
+    ("helios", "Helios", "Hyperion"),
+    # Ithaca / suitors & servants
+    ("antinous", "Antinous", "Eupeithes-son"),
+    ("eurymachus", "Eurymachus", "Polybus-son"),
+    ("amphinomus", "Amphinomus", "Nisus-son"),
+    ("eumaeus", "Eumaeus", "the Swineherd"),
+    ("philoetius", "Philoetius", "the Cowherd"),
+    ("melanthius", "Melanthius", "Dolios-son"),
+    # Pylos & Sparta
+    ("nestor", "Nestor", "of Pylos"),
+    ("menelaus", "Menelaus", "Atreides"),
+    ("helen", "Helen", "of Sparta"),
+    ("peisistratus", "Peisistratus", "Nestor-son"),
+    # Phaeacians
+    ("alcinous", "Alcinous", "of Scheria"),
+    ("arete", "Arete", "of Scheria"),
+    ("nausicaa", "Nausicaa", "Alcinous-daughter"),
+    ("demodocus", "Demodocus", "the Bard"),
+    # The wanderings
+    ("polyphemus", "Polyphemus", "the Cyclops"),
+    ("tiresias", "Tiresias", "the Seer"),
+    ("elpenor", "Elpenor", "the Comrade"),
+    ("eurylochus", "Eurylochus", "the Comrade"),
+]
+
+_BASE_TXNS = [
+    ("credit", "5000.00", "Cash-in"),
+    ("debit", "150.00", "Buy load"),
+    ("debit", "320.00", "Pay bills"),
 ]
 
 
@@ -159,28 +87,49 @@ def seed() -> None:
     session = get_session()
     try:
         pw_hash = hash_password(_DEMO_PASSWORD)
-        created = 0
-        for u in _DEMO_USERS:
-            # Idempotent per-user: skip users that already exist so new roster
-            # members get added on redeploy without duplicating existing ones.
-            if session.query(User).filter_by(email=u["email"]).first():
-                continue
-            created += 1
-            user = User(
-                email=u["email"],
-                password_hash=pw_hash,
-                first_name=u["first_name"],
-                last_name=u["last_name"],
-            )
-            session.add(user)
-            for acct in u["accounts"]:
-                account = Account(
-                    user=user,
-                    account_number=acct["account_number"],
-                    account_type=acct["account_type"],
+        by_handle: dict[str, User] = {}
+
+        # Users + wallets (idempotent per email).
+        for i, (handle, first, last) in enumerate(_ROSTER):
+            email = f"{handle}@dcash.demo"
+            user = session.query(User).filter_by(email=email).first()
+            if user is None:
+                user = User(
+                    email=email,
+                    handle=handle,
+                    password_hash=pw_hash,
+                    first_name=first,
+                    last_name=last,
+                    is_seed=True,
                 )
+                session.add(user)
+                account = Account(user=user, account_number=f"90{i:08d}", account_type="wallet")
                 session.add(account)
-                _build_transactions(session, account, acct["transactions"])
+                _build_transactions(session, account, _BASE_TXNS)
+            else:
+                # Backfill identity on pre-existing rows.
+                user.handle = user.handle or handle
+                user.is_seed = True
+            by_handle[handle] = user
+
+        session.flush()  # assign ids for contact links
+
+        # Seed contacts: each user knows the next 3 in the roster (directional).
+        handles = [h for h, _, _ in _ROSTER]
+        n = len(handles)
+        for i, handle in enumerate(handles):
+            owner = by_handle[handle]
+            for j in range(1, 4):
+                other = by_handle[handles[(i + j) % n]]
+                if owner.id == other.id:
+                    continue
+                exists = (
+                    session.query(Contact)
+                    .filter_by(owner_id=owner.id, contact_id=other.id)
+                    .first()
+                )
+                if exists is None:
+                    session.add(Contact(owner_id=owner.id, contact_id=other.id))
 
         session.commit()
     except Exception:

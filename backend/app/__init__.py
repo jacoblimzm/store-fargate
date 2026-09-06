@@ -24,12 +24,26 @@ def create_app() -> Flask:
     app = Flask(__name__)
     CORS(app)
 
-    from .routes import account_bp, auth_bp, chat_bp, health_bp, user_bp
+    from .routes import (
+        account_bp,
+        admin_bp,
+        auth_bp,
+        chat_bp,
+        contact_bp,
+        health_bp,
+        signup_bp,
+        transfer_bp,
+        user_bp,
+    )
 
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(signup_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(account_bp)
+    app.register_blueprint(contact_bp)
+    app.register_blueprint(transfer_bp)
+    app.register_blueprint(admin_bp)
     app.register_blueprint(chat_bp)
 
     @app.after_request

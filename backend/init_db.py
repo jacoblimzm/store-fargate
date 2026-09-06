@@ -30,9 +30,28 @@ def wait_for_db(max_attempts: int = 30, delay_seconds: float = 2.0) -> None:
     raise RuntimeError("database did not become available in time")
 
 
+def ensure_columns() -> None:
+    """Idempotent adds for columns introduced after a table already existed.
+
+    `create_all` creates new tables but never ALTERs existing ones, so on a DB
+    seeded before these columns existed we add them here (Postgres supports
+    IF NOT EXISTS). No-ops on a fresh DB where create_all already made them.
+    """
+    stmts = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS handle VARCHAR(50)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_seed BOOLEAN NOT NULL DEFAULT false",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS transfer_count INTEGER NOT NULL DEFAULT 0",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_handle ON users (handle)",
+    ]
+    with engine.begin() as conn:
+        for stmt in stmts:
+            conn.execute(text(stmt))
+
+
 def main() -> None:
     wait_for_db()
     init_db()
+    ensure_columns()
     logger.info("schema ready")
 
     if config.SEED_ON_START:

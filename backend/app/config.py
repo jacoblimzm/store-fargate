@@ -34,5 +34,14 @@ class Config:
     # --- Behaviour ---
     SEED_ON_START = os.getenv("SEED_ON_START", "false").lower() in ("1", "true", "yes")
 
+    # --- Demo controls ---
+    # Admin token guarding the destructive reset endpoint.
+    ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "dcash-admin")
+    # Starting wallet balance for self-service signups.
+    SIGNUP_START_BALANCE = os.getenv("SIGNUP_START_BALANCE", "1000.00")
+    # Flag-gated fail/lag on transfers (driven by feature flags later; env for now).
+    TRANSFER_LATENCY_MS = int(os.getenv("TRANSFER_LATENCY_MS", "0"))
+    TRANSFER_FAIL_RATE = float(os.getenv("TRANSFER_FAIL_RATE", "0"))
+
 
 config = Config()
