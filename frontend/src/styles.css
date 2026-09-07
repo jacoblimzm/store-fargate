@@ -348,7 +348,14 @@ code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-fa
 }
 .advisor-panel {
   position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-  width: min(480px, 100%); height: min(86vh, 900px);
+  width: min(480px, 100%);
+  /* Size to the *visible* viewport (dvh) and never let the top slip under the
+     status bar / Dynamic Island, nor the bottom under the home indicator.
+     vh line is a fallback for browsers without dvh. */
+  height: min(86vh, 900px);
+  height: min(86dvh, 900px);
+  max-height: calc(100dvh - env(safe-area-inset-top));
+  padding-bottom: env(safe-area-inset-bottom);
   display: flex; flex-direction: column; overflow: hidden;
   border-radius: 26px 26px 0 0;
   animation: advisor-rise 0.24s ease;
@@ -464,6 +471,31 @@ code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-fa
 .contact-name { font-weight: 600; }
 .contact-handle { font-size: 0.8rem; color: var(--dc-muted); }
 .contact-go { color: var(--dc-muted); font-size: 1.1rem; }
+.contact-remove {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--dc-r-pill);
+  border: 1px solid var(--dc-glass-border);
+  background: var(--dc-glass);
+  color: var(--dc-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.contact-remove:hover { color: var(--dc-danger); border-color: var(--dc-danger); }
+.contact-confirm { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.contact-confirm-q { font-size: 0.8rem; }
+.contact-confirm-yes,
+.contact-confirm-no {
+  border-radius: var(--dc-r-pill);
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.contact-confirm-yes { background: var(--dc-danger); border: 1px solid var(--dc-danger); color: #fff; }
+.contact-confirm-no { background: var(--dc-glass); border: 1px solid var(--dc-glass-border); color: var(--dc-text); }
 
 .amount-box { padding: 18px 16px; text-align: center; }
 .amount-label { color: var(--dc-muted); font-size: 0.8rem; }

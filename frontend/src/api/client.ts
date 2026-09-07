@@ -81,6 +81,9 @@ export const api = {
   scanContact(payload: string): Promise<Contact> {
     return request<Contact>("/contacts/scan", { method: "POST", body: { payload } });
   },
+  deleteContact(handle: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/contacts/${encodeURIComponent(handle)}`, { method: "DELETE" });
+  },
   myQr(): Promise<MyQr> {
     return request<MyQr>("/me/qr");
   },

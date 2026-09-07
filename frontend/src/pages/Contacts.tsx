@@ -13,6 +13,7 @@ export default function Contacts() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
 
   const load = () => api.contacts().then(setContacts).catch(() => setContacts([]));
   useEffect(() => {
@@ -43,6 +44,20 @@ export default function Contacts() {
     setScanning(false);
     setNotice("");
     await addByValue(text);
+  };
+
+  const remove = async (c: Contact) => {
+    setConfirmId(null);
+    if (!c.handle) return;
+    setError("");
+    setNotice("");
+    try {
+      await api.deleteContact(c.handle);
+      setNotice(`Removed @${c.handle}.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not remove contact");
+    }
   };
 
   return (
@@ -88,6 +103,27 @@ export default function Contacts() {
                 <span className="contact-name">{c.name}</span>
                 <span className="contact-handle">@{c.handle}</span>
               </span>
+              {confirmId === c.id ? (
+                <span className="contact-confirm">
+                  <span className="contact-confirm-q muted">Remove?</span>
+                  <button type="button" className="contact-confirm-yes" onClick={() => remove(c)}>
+                    Remove
+                  </button>
+                  <button type="button" className="contact-confirm-no" onClick={() => setConfirmId(null)}>
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="contact-remove"
+                  aria-label={`Remove ${c.name}`}
+                  title="Remove contact"
+                  onClick={() => { setError(""); setNotice(""); setConfirmId(c.id); }}
+                >
+                  &times;
+                </button>
+              )}
             </div>
           ))
         )}

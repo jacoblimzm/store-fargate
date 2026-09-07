@@ -78,6 +78,24 @@ def scan_contact():
         session.close()
 
 
+@contact_bp.delete("/api/contacts/<handle>")
+@require_auth
+def delete_contact(handle):
+    handle = _parse_handle(handle)
+    session = get_session()
+    try:
+        target = session.query(User).filter_by(handle=handle).one_or_none()
+        if target is None:
+            return jsonify({"error": "no user with that handle"}), 404
+        row = session.query(Contact).filter_by(owner_id=g.user_id, contact_id=target.id).first()
+        if row is not None:
+            session.delete(row)
+            session.commit()
+        return jsonify({"ok": True})
+    finally:
+        session.close()
+
+
 @contact_bp.get("/api/me/qr")
 @require_auth
 def my_qr():
