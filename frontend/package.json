@@ -11,6 +11,8 @@
   "dependencies": {
     "@datadog/browser-logs": "^6.6.0",
     "@datadog/browser-rum": "^6.6.0",
+    "qr-scanner": "^1.4.2",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.1.0"

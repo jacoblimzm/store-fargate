@@ -9,12 +9,12 @@ export interface MiniApp {
 }
 
 export const miniApps: MiniApp[] = [
-  { key: "send", label: "Send", route: "/soon/send", enabled: true },
+  { key: "send", label: "Send", route: "/send", enabled: true },
+  { key: "contacts", label: "Contacts", route: "/contacts", enabled: true },
   { key: "pay", label: "Pay Bills", route: "/soon/pay", enabled: true },
   { key: "bank", label: "Bank", route: "/soon/bank", enabled: true },
   { key: "cards", label: "Cards", route: "/soon/cards", enabled: true },
   { key: "loans", label: "Loans", route: "/soon/loans", enabled: true },
   { key: "shop", label: "Shop", route: "/soon/shop", enabled: false },
   { key: "rides", label: "Rides", route: "/soon/rides", enabled: false },
-  { key: "more", label: "More", route: "/soon/more", enabled: true },
 ];

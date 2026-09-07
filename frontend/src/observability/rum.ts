@@ -56,3 +56,9 @@ export function setRumUser(user: User): void {
 export function clearRumUser(): void {
   datadogRum.clearUser();
 }
+
+// Start a named RUM view on client-side navigation so each route is a distinct
+// view — this is what feeds Journey Monitoring funnels.
+export function startRumView(name: string): void {
+  datadogRum.startView({ name });
+}

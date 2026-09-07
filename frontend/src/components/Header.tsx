@@ -3,6 +3,7 @@ import { useAuth } from "../auth";
 import { initials } from "../format";
 import { Brand } from "./ui/Brand";
 import { Avatar } from "./ui/Avatar";
+import { ServiceIcon } from "./ui/ServiceIcon";
 import { ThemeToggle } from "../theme/theme";
 
 export default function Header() {
@@ -16,6 +17,14 @@ export default function Header() {
         <Brand /> DCash
       </div>
       <div className="topbar-actions">
+        <button
+          type="button"
+          className="theme-toggle"
+          aria-label="My QR code"
+          onClick={() => navigate("/receive")}
+        >
+          <ServiceIcon name="qr" size={20} />
+        </button>
         <ThemeToggle />
         <button
           type="button"

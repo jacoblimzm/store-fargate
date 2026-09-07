@@ -3,8 +3,11 @@
 // which forward /api to the Flask backend.
 import type {
   Account,
+  Contact,
   LoginResponse,
+  MyQr,
   TransactionsResponse,
+  TransferResult,
   User,
 } from "../types";
 
@@ -65,6 +68,24 @@ export const api = {
   clearToken,
   login(email: string, password: string): Promise<LoginResponse> {
     return request<LoginResponse>("/auth/login", { method: "POST", body: { email, password } });
+  },
+  signup(username: string, displayName?: string): Promise<LoginResponse> {
+    return request<LoginResponse>("/signup", { method: "POST", body: { username, displayName } });
+  },
+  contacts(): Promise<Contact[]> {
+    return request<Contact[]>("/contacts");
+  },
+  addContact(handle: string): Promise<Contact> {
+    return request<Contact>("/contacts", { method: "POST", body: { handle } });
+  },
+  scanContact(payload: string): Promise<Contact> {
+    return request<Contact>("/contacts/scan", { method: "POST", body: { payload } });
+  },
+  myQr(): Promise<MyQr> {
+    return request<MyQr>("/me/qr");
+  },
+  transfer(toHandle: string, amount: string, note?: string): Promise<TransferResult> {
+    return request<TransferResult>("/transfers", { method: "POST", body: { toHandle, amount, note } });
   },
   me(): Promise<User> {
     return request<User>("/users/me");
