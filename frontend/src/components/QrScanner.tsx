@@ -44,10 +44,24 @@ export default function QrScannerModal({ onResult, onClose }: Props) {
 
     const scanner = new QrScanner(video, (res) => deliver(res.data), {
       preferredCamera: "environment",
-      highlightScanRegion: true,
-      highlightCodeOutline: true,
+      // Our own reticle is the aim guide; disable the library overlays so they
+      // don't misalign with the object-fit:cover video.
+      highlightScanRegion: false,
+      highlightCodeOutline: false,
       returnDetailedScanResult: true,
-      maxScansPerSecond: 5,
+      onDecodeError: () => {}, // "no QR found" fires every frame — keep it quiet
+      // Scan a large centered square so the QR just needs to be roughly in view.
+      calculateScanRegion: (v) => {
+        const size = Math.round(Math.min(v.videoWidth, v.videoHeight) * 0.9);
+        return {
+          x: Math.round((v.videoWidth - size) / 2),
+          y: Math.round((v.videoHeight - size) / 2),
+          width: size,
+          height: size,
+          downScaledWidth: 500,
+          downScaledHeight: 500,
+        };
+      },
     });
 
     QrScanner.hasCamera()
@@ -101,7 +115,7 @@ export default function QrScannerModal({ onResult, onClose }: Props) {
         </div>
 
         <div className="scanner-stage">
-          <video ref={videoRef} className="scanner-video" muted playsInline />
+          <video ref={videoRef} className="scanner-video" autoPlay muted playsInline />
           <div className="scanner-reticle" aria-hidden="true" />
           {starting && !error ? <div className="scanner-status muted">Starting camera…</div> : null}
         </div>
@@ -109,7 +123,7 @@ export default function QrScannerModal({ onResult, onClose }: Props) {
         {error ? (
           <p className="error scanner-msg">{error}</p>
         ) : (
-          <p className="scanner-msg muted">Point at someone's DCash QR to add &amp; pay them.</p>
+          <p className="scanner-msg muted">Hold a DCash QR inside the box — it scans automatically.</p>
         )}
 
         <button type="button" className="btn btn-secondary" onClick={() => fileRef.current?.click()}>
