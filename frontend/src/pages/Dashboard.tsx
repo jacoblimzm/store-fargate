@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { useAuth } from "../auth";
 import { currency, formatDate } from "../format";
 import { miniApps } from "../miniapps/registry";
+import { ServiceIcon } from "../components/ui/ServiceIcon";
 import type { Account, Transaction } from "../types";
 
 export default function Dashboard() {
@@ -64,10 +65,21 @@ export default function Dashboard() {
             tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
-              navigate("/soon/send");
+              navigate("/send");
             }}
           >
             Send
+          </span>
+          <span
+            className="wallet-btn ghost"
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/receive");
+            }}
+          >
+            Receive
           </span>
         </div>
       </button>
@@ -81,7 +93,7 @@ export default function Dashboard() {
             disabled={!m.enabled}
             onClick={() => m.enabled && navigate(m.route)}
           >
-            <span className="tile-icon" aria-hidden="true" />
+            <span className="tile-icon" aria-hidden="true"><ServiceIcon name={m.key} /></span>
             <span className="tile-label">{m.label}</span>
           </button>
         ))}
