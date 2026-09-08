@@ -35,7 +35,14 @@ export default function Receive() {
         {qr ? (
           <>
             <div className="qr-frame qr-frame-lg">
-              <QRCodeSVG value={qr.payload} size={220} bgColor="transparent" fgColor="currentColor" />
+              <QRCodeSVG
+                value={qr.payload}
+                size={220}
+                bgColor="#ffffff"
+                fgColor="#0b0b12"
+                level="M"
+                marginSize={4}
+              />
             </div>
             <div className="qr-handle">@{qr.handle}</div>
             <p className="muted qr-hint">Have someone scan this to add you and send you cash instantly.</p>
