@@ -76,19 +76,27 @@ def _slow_query():
 
 
 def _memory():
-    blob = bytearray(64 * 1024 * 1024)  # ~64 MB
-    for i in range(0, len(blob), 4096):
+    # Big enough to move the needle, held long enough to land on a metrics
+    # sample (~10-15s). Capped to keep headroom under the 2GB task limit.
+    mb = _req_int("mb", default=512, lo=64, hi=1024)
+    hold = _req_int("seconds", default=12, lo=1, hi=30)
+    blob = bytearray(mb * 1024 * 1024)
+    for i in range(0, len(blob), 4096):  # touch each page so it's resident (RSS)
         blob[i] = 1
-    time.sleep(1.0)
+    time.sleep(hold)
     del blob
-    return {"configured": True, "status": "emitted", "detail": "Allocated ~64MB briefly — visible in container memory / infra metrics."}
+    return {
+        "configured": True,
+        "status": "emitted",
+        "detail": f"Held ~{mb}MB resident for ~{hold}s — visible on container/infra memory.",
+    }
 
 
-def _req_seconds(default: int, lo: int, hi: int) -> int:
-    """Read a `seconds` override from query string or JSON body, clamped."""
-    raw = request.args.get("seconds")
+def _req_int(name: str, default: int, lo: int, hi: int) -> int:
+    """Read an int override (`name`) from query string or JSON body, clamped."""
+    raw = request.args.get(name)
     if raw is None:
-        raw = (request.get_json(silent=True) or {}).get("seconds")
+        raw = (request.get_json(silent=True) or {}).get(name)
     try:
         return max(lo, min(int(raw), hi))
     except (TypeError, ValueError):
@@ -111,7 +119,7 @@ def _burn_cpu(deadline: float) -> float:
 
 
 def _cpu():
-    seconds = _req_seconds(default=5, lo=1, hi=20)
+    seconds = _req_int("seconds", default=5, lo=1, hi=20)
     _burn_cpu(time.time() + seconds)
     profiling = _truthy(os.getenv("DD_PROFILING_ENABLED"))
     return {
