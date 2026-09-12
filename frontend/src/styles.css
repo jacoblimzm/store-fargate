@@ -588,6 +588,43 @@ code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-fa
 .status-sub { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dc-muted); }
 .status-flags { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px; }
 
+/* --- Observability Lab ------------------------------------------------- */
+.lab-head h1 { margin: 0 0 6px; }
+.lab-head p { margin: 0; font-size: 0.88rem; }
+.lab-group { display: flex; flex-direction: column; gap: 8px; }
+.lab-rows { padding: 4px 14px; }
+.lab-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0;
+  background: transparent; border: none; cursor: pointer; font-family: inherit;
+  text-align: left; color: var(--dc-text);
+}
+.lab-row:disabled { opacity: 0.55; cursor: default; }
+.lab-row + .lab-row { border-top: 1px solid var(--dc-line); }
+.lab-row-meta { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.lab-row-label { font-weight: 600; font-size: 0.95rem; }
+.lab-row-hint { font-size: 0.78rem; }
+.lab-row-go {
+  flex: none; font-size: 0.8rem; font-weight: 600; color: var(--dc-violet-soft);
+  border: 1px solid var(--dc-glass-border); border-radius: var(--dc-r-pill); padding: 4px 12px;
+}
+
+.lab-console { padding: 6px 14px; display: flex; flex-direction: column; }
+.lab-console-empty { padding: 12px 0; }
+.lab-log { padding: 12px 0; }
+.lab-log + .lab-log { border-top: 1px solid var(--dc-line); }
+.lab-log-head { display: flex; align-items: center; gap: 10px; }
+.lab-log-label { font-weight: 600; font-size: 0.9rem; }
+.lab-log-ts { font-size: 0.75rem; margin-left: auto; }
+.lab-log-detail { margin: 6px 0 0; font-size: 0.83rem; color: var(--dc-muted); line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+.lab-log-trace { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: var(--dc-violet-soft); }
+
+.lab-toast {
+  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom));
+  transform: translateX(-50%); z-index: 70;
+  padding: 10px 16px; border-radius: var(--dc-r-pill); font-size: 0.85rem; font-weight: 600;
+  max-width: calc(100% - 40px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* --- Contacts: scan CTA + notice -------------------------------------- */
 .scan-cta {
   display: inline-flex;

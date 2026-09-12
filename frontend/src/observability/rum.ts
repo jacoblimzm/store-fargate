@@ -96,6 +96,23 @@ export function isSessionReplayActive(): boolean {
   }
 }
 
+// Fire a custom RUM action / error from the Observability Lab.
+export function rumAction(name: string, context?: Record<string, unknown>): void {
+  try {
+    datadogRum.addAction(name, context);
+  } catch {
+    /* no-op if RUM not initialized */
+  }
+}
+
+export function rumError(error: Error, context?: Record<string, unknown>): void {
+  try {
+    datadogRum.addError(error, context);
+  } catch {
+    /* no-op if RUM not initialized */
+  }
+}
+
 export function isRumProfilingEnabled(): boolean {
   try {
     const cfg = datadogRum.getInitConfiguration() as { enableExperimentalFeatures?: string[] } | undefined;

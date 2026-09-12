@@ -51,3 +51,11 @@ export interface TransferResult {
   senderBalance: number;
   transferCount: number;
 }
+
+export interface LabResult {
+  scenario: string;
+  configured: boolean;
+  status: string;
+  detail: string;
+  traceId?: string | null;
+}

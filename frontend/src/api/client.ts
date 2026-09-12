@@ -4,6 +4,7 @@
 import type {
   Account,
   Contact,
+  LabResult,
   LoginResponse,
   MyQr,
   TransactionsResponse,
@@ -101,5 +102,8 @@ export const api = {
   },
   chat(message: string): Promise<{ reply: string }> {
     return request<{ reply: string }>("/chat", { method: "POST", body: { message } });
+  },
+  lab(scenario: string): Promise<LabResult> {
+    return request<LabResult>(`/lab/${scenario}`, { method: "POST" });
   },
 };
