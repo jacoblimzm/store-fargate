@@ -30,7 +30,7 @@ const GROUPS: Group[] = [
       { key: "slow", label: "Slow endpoint", hint: "~2s latency → APM", kind: "api", scenario: "slow" },
       { key: "slow_query", label: "Slow query", hint: "APM db span + DBM", kind: "api", scenario: "slow_query" },
       { key: "memory", label: "Memory hog", hint: "~64MB → infra", kind: "api", scenario: "memory" },
-      { key: "cpu", label: "CPU burn", hint: "→ Continuous Profiler", kind: "api", scenario: "cpu" },
+      { key: "cpu", label: "CPU burn", hint: "~5s heavy → Profiler", kind: "api", scenario: "cpu" },
     ],
   },
   {

@@ -11,6 +11,7 @@ are fired client-side from the Lab page, not here.
 """
 
 import logging
+import math
 import os
 import random
 import socket
@@ -18,7 +19,7 @@ import sys
 import time
 
 from ddtrace import tracer
-from flask import Blueprint, g, jsonify
+from flask import Blueprint, g, jsonify, request
 from sqlalchemy import text
 
 from ..auth import require_auth
@@ -83,19 +84,43 @@ def _memory():
     return {"configured": True, "status": "emitted", "detail": "Allocated ~64MB briefly — visible in container memory / infra metrics."}
 
 
+def _req_seconds(default: int, lo: int, hi: int) -> int:
+    """Read a `seconds` override from query string or JSON body, clamped."""
+    raw = request.args.get("seconds")
+    if raw is None:
+        raw = (request.get_json(silent=True) or {}).get("seconds")
+    try:
+        return max(lo, min(int(raw), hi))
+    except (TypeError, ValueError):
+        return default
+
+
+def _burn_cpu(deadline: float) -> float:
+    """Tight, CPU-bound math loop — a named frame the profiler samples clearly.
+
+    The inner batch runs many iterations between clock checks so the CPU stays
+    pegged (not stuck calling time.time()).
+    """
+    acc = 0.0
+    x = 0.123456789
+    while time.time() < deadline:
+        for _ in range(500_000):
+            x = math.sqrt((x + 1.0) * 1.0000001)
+            acc += math.sin(x) * math.cos(x) + math.log1p(x)
+    return acc
+
+
 def _cpu():
-    end = time.time() + 2.0
-    acc = 0
-    while time.time() < end:
-        acc += sum(i * i for i in range(2000))
+    seconds = _req_seconds(default=5, lo=1, hi=20)
+    _burn_cpu(time.time() + seconds)
     profiling = _truthy(os.getenv("DD_PROFILING_ENABLED"))
     return {
         "configured": profiling,
         "status": "emitted",
         "detail": (
-            "Burned CPU ~2s — shows in the Continuous Profiler flame graph."
+            f"Burned CPU ~{seconds}s in _burn_cpu — shows in the Continuous Profiler flame graph."
             if profiling
-            else "Burned CPU ~2s (infra CPU only). Set DD_PROFILING_ENABLED=true for profiler flame graphs."
+            else f"Burned CPU ~{seconds}s (infra CPU only). Set DD_PROFILING_ENABLED=true for profiler flame graphs."
         ),
     }
 
