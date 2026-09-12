@@ -16,6 +16,7 @@ import os
 import random
 import socket
 import sys
+import threading
 import time
 
 from ddtrace import tracer
@@ -23,7 +24,7 @@ from flask import Blueprint, g, jsonify, request
 from sqlalchemy import text
 
 from ..auth import require_auth
-from ..db import get_session
+from ..db import engine, get_session
 
 logger = logging.getLogger("pay2play")
 
@@ -65,14 +66,88 @@ def _slow():
     return {"configured": True, "status": "emitted", "detail": "Held the request ~2s — visible as APM latency on pay2play-backend."}
 
 
+_LAB_BIG_ROWS = 1_500_000
+
+
+def _ensure_lab_big():
+    """Lazily build a ~1M-row table so the slow query does real, flaggable work."""
+    with engine.begin() as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS lab_big ("
+            "id serial PRIMARY KEY, category text, amount numeric(10,2), "
+            "note text, created_at timestamptz DEFAULT now())"
+        ))
+        count = conn.execute(text("SELECT count(*) FROM lab_big")).scalar() or 0
+        if count < _LAB_BIG_ROWS:
+            conn.execute(
+                text(
+                    "INSERT INTO lab_big (category, amount, note) "
+                    "SELECT (ARRAY['groceries','transfer','bills','shopping','travel'])[1 + floor(random()*5)::int], "
+                    "round((random()*1000)::numeric, 2), md5(random()::text) "
+                    "FROM generate_series(1, :n)"
+                ),
+                {"n": _LAB_BIG_ROWS - count},
+            )
+
+
 def _slow_query():
+    _ensure_lab_big()
     session = get_session()
     try:
-        session.execute(text("SELECT pg_sleep(1.5)"))
-        session.execute(text("SELECT count(*) FROM transactions"))
+        # GROUP BY a high-cardinality unindexed column (~1.5M near-unique md5s)
+        # forces a full seq scan + a large hash aggregate + sort. A realistic
+        # "bad analytics query" DBM flags as slow with high rows examined.
+        session.execute(text(
+            "SELECT note, count(*) AS n "
+            "FROM lab_big "
+            "GROUP BY note "
+            "ORDER BY n DESC, note "
+            "LIMIT 20"
+        ))
     finally:
         session.close()
-    return {"configured": True, "status": "emitted", "detail": "Ran a deliberately slow query — shows in APM db spans + DBM query samples."}
+    return {
+        "configured": True,
+        "status": "emitted",
+        "detail": "Full seq scan + high-cardinality GROUP BY over ~1.5M rows — DBM flags slow query / high row volume.",
+    }
+
+
+def _ensure_lock_row():
+    with engine.begin() as conn:
+        conn.execute(text("CREATE TABLE IF NOT EXISTS lab_locks (id int PRIMARY KEY, val int NOT NULL DEFAULT 0)"))
+        conn.execute(text("INSERT INTO lab_locks (id, val) VALUES (1, 0) ON CONFLICT (id) DO NOTHING"))
+
+
+def _hold_lock(hold: float):
+    """Holder: grab a row lock and sit idle-in-transaction for `hold` seconds."""
+    conn = engine.connect()
+    try:
+        trans = conn.begin()
+        conn.execute(text("UPDATE lab_locks SET val = val + 1 WHERE id = 1"))
+        time.sleep(hold)  # idle in transaction, still holding the row lock
+        trans.commit()
+    except Exception:  # noqa: BLE001
+        logger.exception("lab: lock holder failed")
+    finally:
+        conn.close()
+
+
+def _lock_contention():
+    hold = _req_int("seconds", default=8, lo=2, hi=20)
+    _ensure_lock_row()
+    threading.Thread(target=_hold_lock, args=(hold,), daemon=True).start()
+    time.sleep(0.7)  # let the holder acquire the lock first
+    started = time.time()
+    with engine.begin() as conn:
+        # Blocks on the row lock held by the idle-in-transaction session above.
+        conn.execute(text("UPDATE lab_locks SET val = val + 1 WHERE id = 1"))
+    waited = round(time.time() - started, 2)
+    return {
+        "configured": True,
+        "status": "emitted",
+        "detail": f"Waited ~{waited}s on a row lock held by an idle-in-transaction session — DBM shows Lock Contention + blocked/blocking queries.",
+    }
 
 
 def _memory():
@@ -234,6 +309,7 @@ _SCENARIOS = {
     "payment_error": _payment_error,
     "error_batch": _error_batch,
     "dbm_write": _dbm_write,
+    "lock_contention": _lock_contention,
     "metrics": _metrics,
     "prompt_injection": _prompt_injection,
 }

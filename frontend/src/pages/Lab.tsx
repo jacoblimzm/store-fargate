@@ -28,7 +28,7 @@ const GROUPS: Group[] = [
     title: "Performance",
     items: [
       { key: "slow", label: "Slow endpoint", hint: "~2s latency → APM", kind: "api", scenario: "slow" },
-      { key: "slow_query", label: "Slow query", hint: "APM db span + DBM", kind: "api", scenario: "slow_query" },
+      { key: "slow_query", label: "Slow query", hint: "seq scan ~1M rows → DBM", kind: "api", scenario: "slow_query" },
       { key: "memory", label: "Memory hog", hint: "~512MB ×12s → infra", kind: "api", scenario: "memory" },
       { key: "cpu", label: "CPU burn", hint: "~5s heavy → Profiler", kind: "api", scenario: "cpu" },
     ],
@@ -45,6 +45,7 @@ const GROUPS: Group[] = [
     title: "Data & metrics",
     items: [
       { key: "dbm_write", label: "DB write", hint: "write path → DBM", kind: "api", scenario: "dbm_write" },
+      { key: "lock_contention", label: "Lock contention", hint: "blocked/blocking → DBM", kind: "api", scenario: "lock_contention" },
       { key: "metrics", label: "Custom metric", hint: "→ DogStatsD", kind: "api", scenario: "metrics" },
     ],
   },
