@@ -396,6 +396,22 @@ code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-fa
 }
 .advisor-input-spark { color: var(--dc-violet-soft); display: inline-flex; }
 .advisor-input input { flex: 1; background: transparent; border: none; outline: none; color: var(--dc-text); font-family: inherit; font-size: 0.95rem; padding: 8px 0; }
+.advisor-send {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--dc-hero);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.advisor-send:disabled { opacity: 0.45; cursor: default; }
 .advisor-disclaimer { text-align: center; color: var(--dc-muted); font-size: 0.72rem; margin: 0 0 12px; }
 
 /* --- Bottom nav --------------------------------------------------------- */

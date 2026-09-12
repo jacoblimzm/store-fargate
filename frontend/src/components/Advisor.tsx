@@ -120,6 +120,9 @@ export default function Advisor() {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
+          <button type="submit" className="advisor-send" aria-label="Send message" disabled={!text.trim()}>
+            ↑
+          </button>
         </form>
         <p className="advisor-disclaimer">Advisor can make mistakes.</p>
       </section>
