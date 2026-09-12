@@ -33,7 +33,7 @@ logger = logging.getLogger("pay2play")
 chat_bp = Blueprint("chat", __name__)
 
 _SYSTEM_PROMPT = (
-    "You are Pay2Play's friendly banking assistant for the currently signed-in "
+    "You are DCash's friendly banking assistant for the currently signed-in "
     "customer. You can call tools to look up THIS customer's profile, accounts, "
     "and transactions, and should do so whenever a question depends on their "
     "account data. Answer concisely. Format money as USD. Never ask for or "
