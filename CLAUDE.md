@@ -116,7 +116,10 @@ its cache under the agent sandbox. **Use `command npm ...`** to bypass the alias
    browser check.
 5. **Currency/labels are config** — no country lock-in (₱ etc. are placeholders).
 6. **Terraform**: state is remote (never commit `*.tfstate`); secrets are data sources; keep
-   `imports.tf` blocks idempotent. Bootstrap (state bucket, lock table, OIDC role) is applied once.
+ `imports.tf` blocks idempotent. Bootstrap (state bucket, lock table, OIDC role) is applied once.
+ The shared execution role is referenced (not managed), so **each Secrets Manager secret needs a
+ matching out-of-band inline `secretsmanager:GetSecretValue` policy** on that role (one per secret;
+ see the header in `terraform/secrets.tf`) — miss it and the task fails to start.
 7. **Don't `git push` to `main`** without explicit intent (it deploys).
 
 ## Reference docs
