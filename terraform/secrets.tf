@@ -18,3 +18,10 @@ data "aws_secretsmanager_secret" "jwt_secret" {
 data "aws_secretsmanager_secret" "openai_api_key" {
   name = "pay2play/openai_api_key"
 }
+
+# Password for the `datadog` Postgres user used by the DBM Agent check.
+# Value is populated out-of-band (like the other secrets); create the DB user
+# with this same password on RDS.
+data "aws_secretsmanager_secret" "datadog_pg_password" {
+  name = "pay2play/datadog-pg-password"
+}

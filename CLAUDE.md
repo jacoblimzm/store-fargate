@@ -90,7 +90,10 @@ its cache under the agent sandbox. **Use `command npm ...`** to bypass the alias
   (`DD_TRACE_AGENT_URL=unix:///var/run/datadog/apm.socket`), `DD_AGENT_HOST` intentionally unset.
 - **RUM + Session Replay + browser Logs + Profiling**: `frontend/src/observability/`.
   `/api` is same-origin so RUM sessions link to backend APM traces.
-- **Infra metrics + CNM (ebpfless)**, **DBM** (off by default — no `datadog` DB user on RDS),
+- **Infra metrics + CNM (ebpfless)**, **DBM** (a dedicated single-replica `pay2play-dbm-agent` ECS
+ service — the sole DB poller, not a per-app sidecar — runs a static Postgres check against RDS via
+ a `com.datadoghq.ad.checks` docker label; needs the `datadog` DB user + the
+ `pay2play/datadog-pg-password` secret populated),
   **Feature Flags** (OpenFeature, planned), **Status page** + **Observability Lab** (planned).
 - Service names are `pay2play-*` today (keep for dashboard continuity); RUM/APM `service` may
   move to `dcash-*` at rebrand — decide deliberately.

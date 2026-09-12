@@ -15,10 +15,31 @@ resource "aws_db_parameter_group" "pg16" {
   family      = "postgres16"
   description = "pay2play postgres params"
 
+  # Datadog DBM: load pg_stat_statements + capture larger query text and richer
+  # query stats (per the RDS Postgres DBM setup docs). The postmaster-context
+  # params take effect after a reboot.
   parameter {
     name         = "shared_preload_libraries"
     value        = "pg_stat_statements"
     apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "track_activity_query_size"
+    value        = "4096"
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "pg_stat_statements.track"
+    value        = "all"
+    apply_method = "immediate"
+  }
+
+  parameter {
+    name         = "track_io_timing"
+    value        = "on"
+    apply_method = "immediate"
   }
 }
 

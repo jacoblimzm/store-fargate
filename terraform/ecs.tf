@@ -15,10 +15,11 @@ locals {
     "pay2play-logrouter"   = aws_ecr_repository.logrouter.repository_url
   }
 
-  dd_api_key_arn   = data.aws_secretsmanager_secret.dd_api_key.arn
-  database_url_arn = data.aws_secretsmanager_secret.database_url.arn
-  jwt_secret_arn   = data.aws_secretsmanager_secret.jwt_secret.arn
-  openai_key_arn   = data.aws_secretsmanager_secret.openai_api_key.arn
+  dd_api_key_arn          = data.aws_secretsmanager_secret.dd_api_key.arn
+  database_url_arn        = data.aws_secretsmanager_secret.database_url.arn
+  jwt_secret_arn          = data.aws_secretsmanager_secret.jwt_secret.arn
+  openai_key_arn          = data.aws_secretsmanager_secret.openai_api_key.arn
+  datadog_pg_password_arn = data.aws_secretsmanager_secret.datadog_pg_password.arn
 
   # Datadog agent sidecar, parameterised by CloudWatch log group.
   dd_agent_container = { for svc in ["backend", "frontend", "combined-fe"] : svc => {
@@ -371,6 +372,106 @@ resource "aws_ecs_service" "combined_fe" {
 
   # Fail fast + auto-rollback on a bad rollout instead of waiting out the
   # pipeline's stabilize timeout.
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
+  network_configuration {
+    subnets          = var.public_subnet_ids
+    security_groups  = [aws_security_group.task.id]
+    assign_public_ip = true
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Dedicated Database Monitoring Agent.
+#
+# DBM checks poll a *remote* endpoint (RDS), so — unlike APM/logs/CNM which are
+# per-workload sidecars — the check must run on exactly ONE Agent, or every app
+# replica would poll the same instance and double-count. This standalone,
+# single-replica service is the one DBM poller and the home for all current and
+# future database checks (add more `instances` / integrations here). It has no
+# ALB, no Service Connect, and no APM/DogStatsD sockets — just egress to the DB
+# and to Datadog. Reuses the task SG (already permitted into the RDS SG:5432).
+# ---------------------------------------------------------------------------
+resource "aws_ecs_task_definition" "dbm_agent" {
+  family                   = "pay2play-dbm-agent"
+  cpu                      = "256"
+  memory                   = "512"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  execution_role_arn       = data.aws_iam_role.execution.arn
+  task_role_arn            = data.aws_iam_role.task.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "datadog-agent"
+      image     = "public.ecr.aws/datadog/agent:latest"
+      essential = true
+      environment = [
+        { name = "DD_SITE", value = var.dd_site },
+        { name = "DD_ENV", value = var.dd_env },
+        { name = "ECS_FARGATE", value = "true" },
+        # DB-monitoring only — no local telemetry to collect here.
+        { name = "DD_APM_ENABLED", value = "false" },
+        { name = "DD_PROCESS_AGENT_ENABLED", value = "false" },
+      ]
+      secrets = [
+        { name = "DD_API_KEY", valueFrom = local.dd_api_key_arn },
+        { name = "DD_PG_PASSWORD", valueFrom = local.datadog_pg_password_arn },
+      ]
+      # RDS is external (no container to autodiscover) so the Postgres check is
+      # defined statically on the Agent container; the password is injected from
+      # Secrets Manager via the %%env_...%% Autodiscovery template variable.
+      dockerLabels = {
+        "com.datadoghq.ad.checks" = jsonencode({
+          postgres = {
+            init_config = {}
+            instances = [{
+              dbm             = true
+              host            = aws_db_instance.main.address
+              port            = 5432
+              username        = "datadog"
+              password        = "%%env_DD_PG_PASSWORD%%"
+              dbname          = "pay2play"
+              collect_schemas = { enabled = true }
+              tags = [
+                "service:pay2play-db",
+                "env:${var.dd_env}",
+                "dbinstanceidentifier:${aws_db_instance.main.identifier}",
+              ]
+            }]
+          }
+        })
+      }
+      healthCheck = {
+        command     = ["CMD-SHELL", "agent health"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 15
+      }
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/pay2play-dbm-agent"
+          awslogs-create-group  = "true"
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "datadog-agent"
+        }
+      }
+    },
+  ])
+}
+
+resource "aws_ecs_service" "dbm_agent" {
+  name            = "pay2play-dbm-agent"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.dbm_agent.arn
+  desired_count   = 1 # exactly one DBM poller
+  launch_type     = "FARGATE"
+
   deployment_circuit_breaker {
     enable   = true
     rollback = true
