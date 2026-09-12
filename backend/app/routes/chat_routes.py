@@ -284,7 +284,14 @@ def chat():
 
     try:
         reply = _run_chat(g.user_id, message)
-    except Exception:
+    except Exception as exc:
+        # AI Guard blocks surface as OpenAIAIGuardAbortError (subclass of both
+        # openai.UnprocessableEntityError and ddtrace's AIGuardAbortError).
+        name = type(exc).__name__
+        if "AIGuard" in name or "Unprocessable" in name:
+            reason = getattr(exc, "reason", None) or "policy violation"
+            logger.warning("chat: AI Guard blocked the request (%s)", reason)
+            return jsonify({"reply": f"⚠️ Blocked by AI Guard ({reason}).", "blocked": True}), 200
         logger.exception("chat completion failed")
         return jsonify({"error": "chat backend error"}), 502
 

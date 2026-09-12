@@ -42,3 +42,9 @@ data "aws_secretsmanager_secret" "openai_api_key" {
 data "aws_secretsmanager_secret" "datadog_pg_password" {
   name = "pay2play/datadog-pg-password"
 }
+
+# Datadog application key (ai_guard_evaluate scope) used by AI Guard to evaluate
+# LLM calls. Injected into the backend alongside DD_API_KEY.
+data "aws_secretsmanager_secret" "datadog_app_key" {
+  name = "pay2play/datadog-app-key"
+}

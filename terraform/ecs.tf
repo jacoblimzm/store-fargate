@@ -20,6 +20,7 @@ locals {
   jwt_secret_arn          = data.aws_secretsmanager_secret.jwt_secret.arn
   openai_key_arn          = data.aws_secretsmanager_secret.openai_api_key.arn
   datadog_pg_password_arn = data.aws_secretsmanager_secret.datadog_pg_password.arn
+  datadog_app_key_arn     = data.aws_secretsmanager_secret.datadog_app_key.arn
 
   # Datadog agent sidecar, parameterised by CloudWatch log group.
   dd_agent_container = { for svc in ["backend", "frontend", "combined-fe"] : svc => {
@@ -125,6 +126,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "DD_TRACE_AGENT_URL", value = "unix:///var/run/datadog/apm.socket" },
         { name = "DD_VERSION", value = var.dd_version },
         { name = "DD_RUNTIME_METRICS_ENABLED", value = "true" },
+        { name = "DD_PROFILING_ENABLED", value = "true" },
         { name = "DD_SERVICE", value = "pay2play-backend" },
         { name = "DD_LOGS_INJECTION", value = "true" },
         { name = "DD_DOGSTATSD_URL", value = "unix:///var/run/datadog/dsd.socket" },
@@ -132,12 +134,17 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "DD_LLMOBS_ML_APP", value = var.dd_llmobs_ml_app },
         { name = "OPENAI_MODEL", value = var.openai_model },
         { name = "DD_DBM_PROPAGATION_MODE", value = "full" },
+        # AI Guard evaluates OpenAI calls (auto-integration under ddtrace-run).
+        { name = "DD_AI_GUARD_ENABLED", value = "true" },
       ]
       mountPoints = [{ sourceVolume = "dd-sockets", containerPath = "/var/run/datadog" }]
       secrets = [
         { name = "DATABASE_URL", valueFrom = local.database_url_arn },
         { name = "JWT_SECRET", valueFrom = local.jwt_secret_arn },
         { name = "OPENAI_API_KEY", valueFrom = local.openai_key_arn },
+        # AI Guard needs an API key + an app key (ai_guard_evaluate scope).
+        { name = "DD_API_KEY", valueFrom = local.dd_api_key_arn },
+        { name = "DD_APP_KEY", valueFrom = local.datadog_app_key_arn },
       ]
       dependsOn = [{ containerName = "datadog-agent", condition = "START" }]
       logConfiguration = {
@@ -429,13 +436,14 @@ resource "aws_ecs_task_definition" "dbm_agent" {
           postgres = {
             init_config = {}
             instances = [{
-              dbm             = true
-              host            = aws_db_instance.main.address
-              port            = 5432
-              username        = "datadog"
-              password        = "%%env_DD_PG_PASSWORD%%"
-              dbname          = "pay2play"
-              collect_schemas = { enabled = true }
+              dbm                       = true
+              host                      = aws_db_instance.main.address
+              port                      = 5432
+              username                  = "datadog"
+              password                  = "%%env_DD_PG_PASSWORD%%"
+              dbname                    = "pay2play"
+              collect_schemas           = { enabled = true }
+              collect_column_statistics = { enabled = true }
               tags = [
                 "service:pay2play-db",
                 "env:${var.dd_env}",
