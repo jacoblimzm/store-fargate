@@ -5,6 +5,7 @@ from .chat_routes import chat_bp
 from .contact_routes import contact_bp
 from .health_routes import health_bp
 from .signup_routes import signup_bp
+from .status_routes import status_bp
 from .transfer_routes import transfer_bp
 from .user_routes import user_bp
 
@@ -16,6 +17,7 @@ __all__ = [
     "contact_bp",
     "health_bp",
     "signup_bp",
+    "status_bp",
     "transfer_bp",
     "user_bp",
 ]

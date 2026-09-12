@@ -62,3 +62,45 @@ export function clearRumUser(): void {
 export function startRumView(name: string): void {
   datadogRum.startView({ name });
 }
+
+// --- Runtime status helpers (used by the Datadog Status page) -------------
+// These reflect the *live* state in this browser session, not build config.
+export const DD_SITE = SITE;
+
+// The browser intake host telemetry is delivered to; ad/tracker blockers and
+// restrictive networks commonly block this domain.
+export const DD_INTAKE_URL = `https://browser-intake-${SITE}/`;
+
+export function isRumInitialized(): boolean {
+  try {
+    return !!datadogRum.getInitConfiguration();
+  } catch {
+    return false;
+  }
+}
+
+export function isLogsInitialized(): boolean {
+  try {
+    return !!datadogLogs.getInitConfiguration();
+  } catch {
+    return false;
+  }
+}
+
+export function isSessionReplayActive(): boolean {
+  try {
+    // Returns a deep link once replay is recording for the current session.
+    return !!datadogRum.getSessionReplayLink?.();
+  } catch {
+    return false;
+  }
+}
+
+export function isRumProfilingEnabled(): boolean {
+  try {
+    const cfg = datadogRum.getInitConfiguration() as { enableExperimentalFeatures?: string[] } | undefined;
+    return !!cfg?.enableExperimentalFeatures?.includes("profiling");
+  } catch {
+    return false;
+  }
+}

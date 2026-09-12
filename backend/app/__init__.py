@@ -32,6 +32,7 @@ def create_app() -> Flask:
         contact_bp,
         health_bp,
         signup_bp,
+        status_bp,
         transfer_bp,
         user_bp,
     )
@@ -45,6 +46,7 @@ def create_app() -> Flask:
     app.register_blueprint(transfer_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(status_bp)
 
     @app.after_request
     def _log_request(response):

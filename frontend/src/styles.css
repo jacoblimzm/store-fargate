@@ -564,6 +564,30 @@ code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-fa
 .auth-switch-label { font-size: 0.9rem; }
 .auth-switch .btn { width: 100%; margin: 0; }
 
+/* --- Datadog Status page ---------------------------------------------- */
+.status-head h1 { margin: 0 0 6px; }
+.status-head p { margin: 0; font-size: 0.88rem; }
+.status-list { padding: 4px 16px; }
+.status-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; }
+.status-row + .status-row { border-top: 1px solid var(--dc-line); }
+.status-meta { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.status-label { font-weight: 600; }
+.status-detail { font-size: 0.82rem; color: var(--dc-muted); line-height: 1.4; }
+.status-pill {
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  padding: 5px 11px; border-radius: var(--dc-r-pill);
+  font-size: 0.74rem; font-weight: 600; white-space: nowrap;
+  border: 1px solid var(--dc-glass-border); background: var(--dc-glass);
+}
+.status-pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.status-pill.ok { color: var(--dc-success); }
+.status-pill.error { color: var(--dc-danger); }
+.status-pill.off { color: var(--dc-muted); }
+.status-pill.checking { color: var(--dc-muted); }
+.status-appmeta { margin: 8px 0 0; font-size: 0.78rem; font-family: var(--dc-font-display); }
+.status-sub { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dc-muted); }
+.status-flags { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px; }
+
 /* --- Contacts: scan CTA + notice -------------------------------------- */
 .scan-cta {
   display: inline-flex;
