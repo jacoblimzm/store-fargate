@@ -5,6 +5,10 @@ psycopg2-binary==2.9.12
 PyJWT==2.13.0
 bcrypt==5.0.0
 flask-cors==6.0.5
-ddtrace==4.13.0
+ddtrace==4.14.0
 python-json-logger==4.1.0
 openai>=3,<4
+openfeature-sdk>=0.7.0
+# NOTE: intentionally pinned to a version with a known CVE (CVE-2024-35195) for
+# the Datadog SCA / OWASP A03:2025 Software Supply Chain demo. Do not bump.
+requests==2.31.0

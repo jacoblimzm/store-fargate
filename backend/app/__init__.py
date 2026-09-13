@@ -4,6 +4,7 @@ from flask import Flask, request
 from flask_cors import CORS
 
 from .db import SessionLocal
+from .feature_flags import init_feature_flags
 from .llmobs_setup import enable_llmobs
 from .logging_config import configure_logging
 
@@ -21,6 +22,8 @@ def create_app() -> Flask:
     # Enable LLM Observability in-code (runs under ddtrace-run). See
     # llmobs_setup.py for the rationale behind validating this combination.
     enable_llmobs()
+    # Datadog Feature Flags (OpenFeature) — gates the security-demo endpoints.
+    init_feature_flags()
     app = Flask(__name__)
     CORS(app)
 
@@ -36,6 +39,7 @@ def create_app() -> Flask:
         status_bp,
         transfer_bp,
         user_bp,
+        vuln_bp,
     )
 
     app.register_blueprint(health_bp)
@@ -49,6 +53,7 @@ def create_app() -> Flask:
     app.register_blueprint(chat_bp)
     app.register_blueprint(status_bp)
     app.register_blueprint(lab_bp)
+    app.register_blueprint(vuln_bp)
 
     @app.after_request
     def _log_request(response):
