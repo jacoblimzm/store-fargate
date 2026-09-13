@@ -202,6 +202,18 @@ h1, h2, h3 { font-family: var(--dc-font-display); letter-spacing: -0.01em; margi
   -webkit-backdrop-filter: var(--dc-blur);
 }
 .field input:focus { outline: none; border-color: var(--dc-violet); }
+/* Seamless @dcash.demo hint pinned to the right of the username field. */
+.field-affix { position: relative; }
+.field-affix input { padding-right: 108px; }
+.field-affix-suffix {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--dc-muted);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
 .demo-hint { margin-top: 20px; font-size: 0.85rem; color: var(--dc-muted); }
 code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-family: ui-monospace, monospace; }
 .error { color: var(--dc-danger); margin-top: 12px; font-size: 0.9rem; }

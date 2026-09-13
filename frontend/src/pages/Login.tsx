@@ -11,18 +11,25 @@ const DEMO_HANDLES = ["odysseus", "penelope", "athena", "hermes", "circe", "nest
 export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [hint, setHint] = useState("");
 
   if (api.getToken()) return <Navigate to="/" replace />;
 
+  // Accounts are keyed by handle; the email is always <handle>@dcash.demo. Let
+  // people type just the handle (append the domain unless they typed a full email).
+  const toEmail = (value: string) => {
+    const v = value.trim();
+    return v.includes("@") ? v : `${v}@dcash.demo`;
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      const { accessToken, user } = await api.login(email.trim(), password);
+      const { accessToken, user } = await api.login(toEmail(login), password);
       signIn(accessToken, user);
       navigate("/", { replace: true });
     } catch (err) {
@@ -35,7 +42,7 @@ export default function Login() {
   const simulate = () => {
     const handle = DEMO_HANDLES[Math.floor(Math.random() * DEMO_HANDLES.length)];
     setError("");
-    setEmail(`${handle}@dcash.demo`);
+    setLogin(handle);
     setPassword(DEMO_PASSWORD);
     setHint(`Filled in @${handle} — click “Sign in” to continue.`);
   };
@@ -51,8 +58,20 @@ export default function Login() {
         <section className="auth-card glass">
           <form onSubmit={submit}>
             <label className="field">
-              <span>Email</span>
-              <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <span>Username</span>
+              <div className="field-affix">
+                <input
+                  type="text"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="odysseus"
+                  required
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                />
+                <span className="field-affix-suffix" aria-hidden="true">@dcash.demo</span>
+              </div>
             </label>
             <label className="field">
               <span>Password</span>

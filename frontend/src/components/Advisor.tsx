@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import { Spark } from "./ui/Spark";
+import { ServiceIcon } from "./ui/ServiceIcon";
 
 interface Msg {
   id: number;
@@ -121,7 +122,7 @@ export default function Advisor() {
             onChange={(e) => setText(e.target.value)}
           />
           <button type="submit" className="advisor-send" aria-label="Send message" disabled={!text.trim()}>
-            ↑
+            <ServiceIcon name="send" size={17} />
           </button>
         </form>
         <p className="advisor-disclaimer">Advisor can make mistakes.</p>
