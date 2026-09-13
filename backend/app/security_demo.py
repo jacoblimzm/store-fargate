@@ -41,6 +41,13 @@ def weak_password_hash(password: str) -> str:
     return hashlib.md5(password.encode()).hexdigest()
 
 
+# --- A05:2025 Injection — SQL built by string interpolation (CWE-89) --------
+# User input formatted straight into cursor.execute() (no parameterization).
+def user_by_handle(cursor, handle: str):
+    cursor.execute(f"SELECT id, handle, first_name FROM users WHERE handle = '{handle}'")
+    return cursor.fetchall()
+
+
 # --- A06:2025 Insecure Design (business-logic flaw) ------------------------
 # Money movement with no authorization, no rate limit, no idempotency key, and
 # no amount validation (negative amounts would reverse the transfer).

@@ -12,10 +12,9 @@ import pickle
 
 import requests
 from flask import Blueprint, abort, g, jsonify, request
-from sqlalchemy import text
 
 from ..auth import require_auth
-from ..db import get_session
+from ..db import engine, get_session
 from ..feature_flags import flag_enabled
 from ..models import Account
 
@@ -60,18 +59,22 @@ def vuln_fetch():
     return jsonify({"status": resp.status_code, "body": resp.text[:2000]})
 
 
-# --- A05:2025 Injection — SQL built by string interpolation ----------------
+# --- A05:2025 Injection — SQL built by string interpolation (CWE-89) --------
 @vuln_bp.get("/api/vuln/search")
 @require_auth
 def vuln_search():
     handle = request.args.get("handle", "")
-    session = get_session()
+    conn = engine.raw_connection()
     try:
-        query = text(f"SELECT id, handle, first_name, last_name FROM users WHERE handle = '{handle}'")
-        rows = session.execute(query).mappings().all()
-        return jsonify([dict(r) for r in rows])
+        cur = conn.cursor()
+        # User input interpolated straight into cursor.execute() — the classic
+        # injectable pattern SAST/IAST flag as SQL injection (CWE-89).
+        cur.execute(f"SELECT id, handle, first_name, last_name FROM users WHERE handle = '{handle}'")
+        cols = [c[0] for c in cur.description]
+        rows = [dict(zip(cols, r)) for r in cur.fetchall()]
+        return jsonify(rows)
     finally:
-        session.close()
+        conn.close()
 
 
 # --- A08:2025 Software or Data Integrity — insecure deserialization --------
