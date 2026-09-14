@@ -106,4 +106,9 @@ export const api = {
   lab(scenario: string): Promise<LabResult> {
     return request<LabResult>(`/lab/${scenario}`, { method: "POST" });
   },
+  // Security-demo (vuln lab) — gated behind the `vuln-lab-enabled` Datadog flag
+  // (404 when off). SQL-injectable on purpose for the SAST/IAST demo.
+  vulnSearch(handle: string): Promise<Array<Record<string, unknown>>> {
+    return request<Array<Record<string, unknown>>>(`/vuln/search?handle=${encodeURIComponent(handle)}`);
+  },
 };

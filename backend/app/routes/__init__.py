@@ -9,6 +9,7 @@ from .signup_routes import signup_bp
 from .status_routes import status_bp
 from .transfer_routes import transfer_bp
 from .user_routes import user_bp
+from .vuln_routes import vuln_bp
 
 __all__ = [
     "account_bp",
@@ -22,4 +23,5 @@ __all__ = [
     "status_bp",
     "transfer_bp",
     "user_bp",
+    "vuln_bp",
 ]

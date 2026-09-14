@@ -6,7 +6,7 @@ import type { LabResult } from "../types";
 // Datadog UI base for trace deep-links (RUM/APM live on the same site).
 const APM_TRACE_URL = (traceId: string) => `https://app.datadoghq.com/apm/trace/${traceId}`;
 
-type Kind = "api" | "rum" | "chat";
+type Kind = "api" | "rum" | "chat" | "vuln";
 
 interface Scenario {
   key: string;
@@ -15,6 +15,7 @@ interface Scenario {
   kind: Kind;
   scenario: string;
   prompt?: string;
+  payload?: string;
   fire?: () => void;
 }
 
@@ -63,6 +64,12 @@ const GROUPS: Group[] = [
       { key: "prompt_injection", label: "Prompt injection", hint: "→ AI Guard", kind: "api", scenario: "prompt_injection" },
     ],
   },
+  {
+    title: "Security (flag-gated)",
+    items: [
+      { key: "sqli", label: "SQL injection", hint: "SAST + IAST → App Sec", kind: "vuln", scenario: "sql_injection", payload: "' OR '1'='1" },
+    ],
+  },
 ];
 
 interface LogEntry extends LabResult {
@@ -101,6 +108,23 @@ export default function Lab() {
       } else if (item.kind === "chat") {
         const { reply } = await api.chat(item.prompt || "Hello");
         res = { scenario: item.scenario, configured: true, status: "replied", detail: reply || "(no response)" };
+      } else if (item.kind === "vuln") {
+        try {
+          const rows = await api.vulnSearch(item.payload || "");
+          const n = Array.isArray(rows) ? rows.length : 0;
+          res = {
+            scenario: item.scenario,
+            configured: true,
+            status: `leaked ${n} row${n === 1 ? "" : "s"}`,
+            detail: `payload: ${item.payload} → ${JSON.stringify(rows).slice(0, 400)}`,
+          };
+        } catch (e) {
+          const status = (e as { status?: number })?.status;
+          res =
+            status === 404
+              ? { scenario: item.scenario, configured: false, status: "gated (404)", detail: "Endpoint is off — flip the `vuln-lab-enabled` flag ON in Datadog to arm it." }
+              : { scenario: item.scenario, configured: false, status: "error", detail: e instanceof Error ? e.message : "failed" };
+        }
       } else {
         item.fire?.();
         res = {

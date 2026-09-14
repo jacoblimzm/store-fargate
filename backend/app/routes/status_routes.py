@@ -11,6 +11,7 @@ import socket
 from flask import Blueprint, jsonify
 
 from ..config import config
+from ..feature_flags import is_ready as _ff_ready
 
 status_bp = Blueprint("status", __name__)
 
@@ -146,6 +147,14 @@ def _products(apm_up: bool, apm_target: str) -> list:
     else:
         items.append(_item("profiling", "Backend Profiling", "off",
                            "Set DD_PROFILING_ENABLED=true to profile the API."))
+
+    # Feature Flags (Datadog OpenFeature, server-side)
+    if _ff_ready():
+        items.append(_item("feature_flags", "Feature Flags (OpenFeature)", "on",
+                           "Datadog OpenFeature provider registered — gates the security-demo (vuln lab)."))
+    else:
+        items.append(_item("feature_flags", "Feature Flags (OpenFeature)", "off",
+                           "Provider not initialized (needs DD_API_KEY + DD_SITE)."))
 
     # Source Code Integration
     if os.getenv("DD_GIT_COMMIT_SHA") and os.getenv("DD_GIT_REPOSITORY_URL"):
