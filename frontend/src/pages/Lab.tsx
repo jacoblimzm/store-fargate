@@ -21,21 +21,39 @@ interface Scenario {
 
 interface Group {
   title: string;
+  accent: string;
   items: Scenario[];
 }
 
 const GROUPS: Group[] = [
   {
-    title: "Performance",
+    title: "APM",
+    accent: "#9b6dff",
     items: [
       { key: "slow", label: "Slow endpoint", hint: "~2s latency → APM", kind: "api", scenario: "slow" },
-      { key: "slow_query", label: "Slow query", hint: "seq scan ~1M rows → DBM", kind: "api", scenario: "slow_query" },
       { key: "memory", label: "Memory hog", hint: "~512MB ×12s → infra", kind: "api", scenario: "memory" },
       { key: "cpu", label: "CPU burn", hint: "~5s heavy → Profiler", kind: "api", scenario: "cpu" },
     ],
   },
   {
+    title: "Database",
+    accent: "#4aa8ff",
+    items: [
+      { key: "slow_query", label: "Slow query", hint: "seq scan ~1M rows → DBM", kind: "api", scenario: "slow_query" },
+      { key: "dbm_write", label: "DB write", hint: "write path → DBM", kind: "api", scenario: "dbm_write" },
+      { key: "lock_contention", label: "Lock contention", hint: "blocked/blocking → DBM", kind: "api", scenario: "lock_contention" },
+    ],
+  },
+  {
+    title: "Metrics",
+    accent: "#4fd18b",
+    items: [
+      { key: "metrics", label: "Custom metric", hint: "→ DogStatsD", kind: "api", scenario: "metrics" },
+    ],
+  },
+  {
     title: "Errors",
+    accent: "#ff6b81",
     items: [
       { key: "payment_error", label: "Payment error", hint: "→ Error Tracking", kind: "api", scenario: "payment_error" },
       { key: "error_batch", label: "Error batch ×5", hint: "→ Error Tracking", kind: "api", scenario: "error_batch" },
@@ -43,15 +61,8 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    title: "Data & metrics",
-    items: [
-      { key: "dbm_write", label: "DB write", hint: "write path → DBM", kind: "api", scenario: "dbm_write" },
-      { key: "lock_contention", label: "Lock contention", hint: "blocked/blocking → DBM", kind: "api", scenario: "lock_contention" },
-      { key: "metrics", label: "Custom metric", hint: "→ DogStatsD", kind: "api", scenario: "metrics" },
-    ],
-  },
-  {
     title: "Frontend",
+    accent: "#ffb454",
     items: [
       { key: "rum_action", label: "Custom RUM action", hint: "→ RUM", kind: "rum", scenario: "lab_custom_action", fire: () => rumAction("lab_custom_action", { source: "lab" }) },
       { key: "rum_error", label: "RUM frontend error", hint: "→ RUM / Error Tracking", kind: "rum", scenario: "lab_frontend_error", fire: () => rumError(new Error("Lab: synthetic RUM error")) },
@@ -59,6 +70,7 @@ const GROUPS: Group[] = [
   },
   {
     title: "AI",
+    accent: "#c47bff",
     items: [
       { key: "llm_read", label: "Ask the Advisor", hint: "→ LLM Observability", kind: "chat", scenario: "llm_read", prompt: "What's my current balance?" },
       { key: "prompt_injection", label: "Prompt injection", hint: "→ AI Guard", kind: "api", scenario: "prompt_injection" },
@@ -66,6 +78,7 @@ const GROUPS: Group[] = [
   },
   {
     title: "Security (flag-gated)",
+    accent: "#ff8c42",
     items: [
       { key: "sqli", label: "SQL injection", hint: "SAST + IAST → App Sec", kind: "vuln", scenario: "sql_injection", payload: "' OR '1'='1" },
     ],
@@ -161,8 +174,8 @@ export default function Lab() {
       </div>
 
       {GROUPS.map((group) => (
-        <div key={group.title} className="lab-group">
-          <div className="section-label">{group.title}</div>
+        <div key={group.title} className="lab-group" style={{ "--group-accent": group.accent } as React.CSSProperties}>
+          <div className="section-label lab-group-label">{group.title}</div>
           <div className="lab-rows glass">
             {group.items.map((item) => (
               <button
@@ -175,7 +188,9 @@ export default function Lab() {
                   <span className="lab-row-label">{item.label}</span>
                   <span className="lab-row-hint muted">{item.hint}</span>
                 </span>
-                <span className="lab-row-go" aria-hidden="true">{busy === item.key ? "…" : "Run"}</span>
+                <span className="lab-row-go">
+                  {busy === item.key ? <span className="lab-spinner" role="status" aria-label="Running" /> : "Run"}
+                </span>
               </button>
             ))}
           </div>

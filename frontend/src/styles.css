@@ -620,7 +620,16 @@ code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-fa
 .lab-head h1 { margin: 0 0 6px; }
 .lab-head p { margin: 0; font-size: 0.88rem; }
 .lab-group { display: flex; flex-direction: column; gap: 8px; }
-.lab-rows { padding: 4px 14px; }
+/* Per-section accent (set inline via --group-accent): a colored dot + label
+   tint + a subtle left edge on the card, to differentiate sections. */
+.lab-group-label { display: flex; align-items: center; gap: 8px; color: var(--group-accent, var(--dc-muted)); }
+.lab-group-label::before {
+  content: "";
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--group-accent, var(--dc-violet));
+  box-shadow: 0 0 8px var(--group-accent, transparent);
+}
+.lab-rows { padding: 4px 14px; border-left: 3px solid var(--group-accent, var(--dc-glass-border)); }
 .lab-row {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0;
   background: transparent; border: none; cursor: pointer; font-family: inherit;
@@ -632,9 +641,22 @@ code { background: var(--dc-tint); padding: 2px 6px; border-radius: 6px; font-fa
 .lab-row-label { font-weight: 600; font-size: 0.95rem; }
 .lab-row-hint { font-size: 0.78rem; }
 .lab-row-go {
-  flex: none; font-size: 0.8rem; font-weight: 600; color: var(--dc-violet-soft);
-  border: 1px solid var(--dc-glass-border); border-radius: var(--dc-r-pill); padding: 4px 12px;
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 68px; min-height: 34px; padding: 8px 20px;
+  font-size: 0.9rem; font-weight: 700; color: var(--dc-violet-soft);
+  border: 1px solid var(--dc-glass-border); border-radius: var(--dc-r-pill);
+  background: var(--dc-glass);
 }
+.lab-row:hover:not(:disabled) .lab-row-go { border-color: var(--dc-violet); }
+/* Spinner shown while a scenario is running. */
+.lab-spinner {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--dc-glass-border);
+  border-top-color: var(--dc-violet-soft);
+  animation: lab-spin 0.7s linear infinite;
+}
+@keyframes lab-spin { to { transform: rotate(360deg); } }
 
 .lab-console { padding: 6px 14px; display: flex; flex-direction: column; }
 .lab-console-empty { padding: 12px 0; }
