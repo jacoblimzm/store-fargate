@@ -88,6 +88,9 @@ services:
       # AI Guard (set DD_APP_KEY with ai_guard_evaluate scope to exercise locally).
       DD_AI_GUARD_ENABLED: "true"
       DD_APP_KEY: ${DD_APP_KEY:-}
+      # App & API Protection + Runtime Code Analysis (IAST) — SQLi etc. at runtime.
+      DD_APPSEC_ENABLED: "true"
+      DD_IAST_ENABLED: "true"
     volumes:
       - dd-sockets:/var/run/datadog
     labels:

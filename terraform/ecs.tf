@@ -131,11 +131,16 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "DD_LOGS_INJECTION", value = "true" },
         { name = "DD_DOGSTATSD_URL", value = "unix:///var/run/datadog/dsd.socket" },
         { name = "DD_ENV", value = var.dd_env },
+        { name = "DD_SITE", value = var.dd_site },
         { name = "DD_LLMOBS_ML_APP", value = var.dd_llmobs_ml_app },
         { name = "OPENAI_MODEL", value = var.openai_model },
         { name = "DD_DBM_PROPAGATION_MODE", value = "full" },
         # AI Guard evaluates OpenAI calls (auto-integration under ddtrace-run).
         { name = "DD_AI_GUARD_ENABLED", value = "true" },
+        # App & API Protection (AAP) + Runtime Code Analysis (IAST) — flags the
+        # security-demo vulns (e.g. SQLi) at runtime and detects attacks.
+        { name = "DD_APPSEC_ENABLED", value = "true" },
+        { name = "DD_IAST_ENABLED", value = "true" },
       ]
       mountPoints = [{ sourceVolume = "dd-sockets", containerPath = "/var/run/datadog" }]
       secrets = [
