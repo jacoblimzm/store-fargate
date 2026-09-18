@@ -120,15 +120,18 @@ def _ensure_lock_row():
 
 
 def _hold_lock(hold: float):
-    """Holder: grab a row lock and sit idle-in-transaction for `hold` seconds."""
+    """Query A: take an explicit table lock, then stay *actively executing*
+    (pg_sleep) for `hold` seconds while still holding the lock."""
     conn = engine.connect()
     try:
         trans = conn.begin()
-        conn.execute(text("UPDATE lab_locks SET val = val + 1 WHERE id = 1"))
-        time.sleep(hold)  # idle in transaction, still holding the row lock
+        conn.execute(text("LOCK TABLE lab_locks IN ACCESS EXCLUSIVE MODE"))
+        # Currently-running statement while the table lock is held — so DBM shows
+        # Query A as executing (not idle) and as the root blocker.
+        conn.execute(text("SELECT pg_sleep(:s)"), {"s": hold})
         trans.commit()
     except Exception:  # noqa: BLE001
-        logger.exception("lab: lock holder failed")
+        logger.exception("lab: lock holder (Query A) failed")
     finally:
         conn.close()
 
@@ -136,17 +139,25 @@ def _hold_lock(hold: float):
 def _lock_contention():
     hold = _req_int("seconds", default=8, lo=2, hi=20)
     _ensure_lock_row()
+    # Query A runs in a background connection: locks the table + sleeps.
     threading.Thread(target=_hold_lock, args=(hold,), daemon=True).start()
-    time.sleep(0.7)  # let the holder acquire the lock first
+    time.sleep(1.0)  # let Query A grab the ACCESS EXCLUSIVE lock + start running
     started = time.time()
-    with engine.begin() as conn:
-        # Blocks on the row lock held by the idle-in-transaction session above.
-        conn.execute(text("UPDATE lab_locks SET val = val + 1 WHERE id = 1"))
+    session = get_session()
+    try:
+        # Query B: a *different* query (a read) that blocks on the table lock A
+        # holds — so DBM clearly shows A (running) blocking B (waiting).
+        session.execute(text("SELECT count(*) AS n FROM lab_locks"))
+    finally:
+        session.close()
     waited = round(time.time() - started, 2)
     return {
         "configured": True,
         "status": "emitted",
-        "detail": f"Waited ~{waited}s on a row lock held by an idle-in-transaction session — DBM shows Lock Contention + blocked/blocking queries.",
+        "detail": (
+            f"Query B (SELECT count(*)) waited ~{waited}s on the ACCESS EXCLUSIVE lock held by "
+            f"Query A (still running pg_sleep) — DBM shows A blocking B as distinct queries."
+        ),
     }
 
 
