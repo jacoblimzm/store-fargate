@@ -100,8 +100,10 @@ export const api = {
   transactions(accountId: number): Promise<TransactionsResponse> {
     return request<TransactionsResponse>(`/accounts/${accountId}/transactions`);
   },
-  chat(message: string): Promise<{ reply: string }> {
-    return request<{ reply: string }>("/chat", { method: "POST", body: { message } });
+  // `image` / `audio` are data URLs (data:<mime>;base64,...) for multimodal
+  // prompts. Audio is normalized to WAV client-side (OpenAI accepts wav/mp3).
+  chat(message: string, image?: string, audio?: string): Promise<{ reply: string }> {
+    return request<{ reply: string }>("/chat", { method: "POST", body: { message, image, audio } });
   },
   lab(scenario: string): Promise<LabResult> {
     return request<LabResult>(`/lab/${scenario}`, { method: "POST" });

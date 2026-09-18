@@ -5,7 +5,7 @@ psycopg2-binary==2.9.12
 PyJWT==2.13.0
 bcrypt==5.0.0
 flask-cors==6.0.5
-ddtrace==4.14.0
+ddtrace==4.15.0
 python-json-logger==4.1.0
 openai>=3,<4
 openfeature-sdk>=0.7.0
