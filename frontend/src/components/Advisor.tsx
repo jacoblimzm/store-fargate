@@ -22,7 +22,11 @@ const SUGGESTIONS = [
 let nextId = 1;
 
 const MAX_RECORD_MS = 60_000; // auto-stop long recordings
-const MAX_AUDIO_BYTES = 6 * 1024 * 1024;
+// Upload caps. Kept below the backend's base64 caps and nginx's 12m /api limit
+// so anything the UI accepts will actually go through (no surprise 413/400).
+const MAX_IMAGE_BYTES = 3.5 * 1024 * 1024; // ~3.5MB
+const MAX_AUDIO_BYTES = 6 * 1024 * 1024; // ~6MB (WAV, ~60s at 16kHz mono)
+const mb = (bytes: number) => `${Math.round((bytes / 1024 / 1024) * 10) / 10}MB`;
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -147,8 +151,8 @@ export default function Advisor() {
       setAttachErr("Use PNG, JPEG, WEBP, or GIF.");
       return;
     }
-    if (file.size > 3.5 * 1024 * 1024) {
-      setAttachErr("Image too large (max 3.5MB).");
+    if (file.size > MAX_IMAGE_BYTES) {
+      setAttachErr(`Image too large (${mb(file.size)}). Max ${mb(MAX_IMAGE_BYTES)}.`);
       return;
     }
     setAttachErr("");
@@ -166,11 +170,17 @@ export default function Advisor() {
       setAttachErr("That's not an audio file.");
       return;
     }
+    // Reject oversized files up front, before the (heavy) decode + WAV re-encode.
+    if (file.size > MAX_AUDIO_BYTES) {
+      setAttachErr(`Audio too large (${mb(file.size)}). Max ${mb(MAX_AUDIO_BYTES)}.`);
+      return;
+    }
     setAttachErr("");
     try {
       const dataUrl = await blobToWavDataUrl(file);
+      // Re-encoded WAV can be larger than the source; guard the final payload too.
       if (Math.ceil((dataUrl.length * 3) / 4) > MAX_AUDIO_BYTES) {
-        setAttachErr("Audio too long (keep it under ~60s).");
+        setAttachErr(`Audio too large after conversion. Max ${mb(MAX_AUDIO_BYTES)} (about 60s).`);
         return;
       }
       setImage(null);
@@ -212,7 +222,7 @@ export default function Advisor() {
         try {
           const dataUrl = await blobToWavDataUrl(blob);
           if (Math.ceil((dataUrl.length * 3) / 4) > MAX_AUDIO_BYTES) {
-            setAttachErr("Recording too long (max ~60s).");
+            setAttachErr(`Recording too large. Max ${mb(MAX_AUDIO_BYTES)} (about 60s).`);
             return;
           }
           setImage(null);
