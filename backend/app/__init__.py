@@ -37,6 +37,7 @@ def create_app() -> Flask:
         lab_bp,
         signup_bp,
         status_bp,
+        topup_bp,
         transfer_bp,
         user_bp,
         vuln_bp,
@@ -52,6 +53,7 @@ def create_app() -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(status_bp)
+    app.register_blueprint(topup_bp)
     app.register_blueprint(lab_bp)
     app.register_blueprint(vuln_bp)
 

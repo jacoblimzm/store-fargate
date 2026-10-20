@@ -52,6 +52,13 @@ export interface TransferResult {
   transferCount: number;
 }
 
+export interface TopUpResult {
+  ok: boolean;
+  amount: number;
+  balance: number;
+  accountId: number;
+}
+
 export interface LabResult {
   scenario: string;
   configured: boolean;

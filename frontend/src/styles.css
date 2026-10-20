@@ -202,6 +202,35 @@ h1, h2, h3 { font-family: var(--dc-font-display); letter-spacing: -0.01em; margi
   -webkit-backdrop-filter: var(--dc-blur);
 }
 .field input:focus { outline: none; border-color: var(--dc-violet); }
+.field select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--dc-glass-border);
+  background: var(--dc-glass);
+  color: var(--dc-text);
+  font: inherit;
+}
+.field select:focus { outline: none; border-color: var(--dc-violet); }
+
+/* Top-up success panel */
+.topup-success-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--dc-success);
+  color: #06281c;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.topup-success-amount {
+  font-family: var(--dc-font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--dc-success);
+}
 /* Seamless @dcash.demo hint pinned to the right of the username field. */
 .field-affix { position: relative; }
 .field-affix input { padding-right: 108px; }

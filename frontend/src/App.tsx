@@ -13,6 +13,7 @@ import AccountDetail from "./pages/AccountDetail";
 import Profile from "./pages/Profile";
 import Contacts from "./pages/Contacts";
 import Receive from "./pages/Receive";
+import TopUp from "./pages/TopUp";
 import ComingSoon from "./pages/ComingSoon";
 import Lab from "./pages/Lab";
 import Status from "./pages/Status";
@@ -33,6 +34,7 @@ function viewName(pathname: string): string {
     "/profile": "Profile",
     "/contacts": "Contacts",
     "/receive": "Receive",
+    "/topup": "Top up",
     "/lab": "Observability Lab",
     "/status": "Datadog Status",
     "/send/recipient": "Send · Recipient",
@@ -79,6 +81,7 @@ export default function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="receive" element={<Receive />} />
+          <Route path="topup" element={<TopUp />} />
           <Route path="lab" element={<Lab />} />
           <Route path="status" element={<Status />} />
           <Route path="send" element={<SendLayout />}>

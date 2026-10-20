@@ -7,6 +7,7 @@ import type {
   LabResult,
   LoginResponse,
   MyQr,
+  TopUpResult,
   TransactionsResponse,
   TransferResult,
   User,
@@ -90,6 +91,9 @@ export const api = {
   },
   transfer(toHandle: string, amount: string, note?: string): Promise<TransferResult> {
     return request<TransferResult>("/transfers", { method: "POST", body: { toHandle, amount, note } });
+  },
+  topUp(amount: string, source?: string): Promise<TopUpResult> {
+    return request<TopUpResult>("/topup", { method: "POST", body: { amount, source } });
   },
   me(): Promise<User> {
     return request<User>("/users/me");

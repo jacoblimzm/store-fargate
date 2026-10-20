@@ -54,7 +54,7 @@ export default function Dashboard() {
             tabIndex={0}
             onClick={(e) => {
               e.stopPropagation();
-              navigate("/soon/pay");
+              navigate("/topup");
             }}
           >
             + Top up
