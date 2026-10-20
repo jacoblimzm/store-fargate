@@ -45,6 +45,14 @@ jobs:
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # Authenticate to ECR Public too: the fluent-bit logrouter's base image
+      # (public.ecr.aws/aws-observability/aws-for-fluent-bit) is pulled from
+      # ECR Public, whose *anonymous* pull quota (shared per runner IP) was
+      # failing the build with "Data limit exceeded". ECR Public is always
+      # us-east-1 and is a separate service from the private ECR login above.
+      - name: Log in to Amazon ECR Public
+        run: aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+
       - name: Build and push images
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}

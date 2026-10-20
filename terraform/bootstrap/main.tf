@@ -161,6 +161,20 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["*"]
   }
 
+  # Auth to ECR Public for pulling CI base images (e.g. the fluent-bit
+  # logrouter's aws-for-fluent-bit base). `ecr:*` above covers only the PRIVATE
+  # registry; ECR Public is a separate service and its auth token additionally
+  # requires sts:GetServiceBearerToken.
+  statement {
+    sid    = "EcrPublicPull"
+    effect = "Allow"
+    actions = [
+      "ecr-public:GetAuthorizationToken",
+      "sts:GetServiceBearerToken",
+    ]
+    resources = ["*"]
+  }
+
   # Read-only secrets + EC2/networking needed to plan/apply.
   statement {
     sid    = "SecretsAndNetworking"
